@@ -8,26 +8,36 @@ interface AuthGuardProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
   redirectTo?: string;
+  requiredRole?: 'student' | 'instructor' | 'admin';
 }
 
 export function AuthGuard({ 
   children, 
   fallback,
-  redirectTo = '/login' 
+  redirectTo,
+  requiredRole
 }: AuthGuardProps) {
   const router = useRouter();
   const isAuthenticated = useIsAuthenticated();
-  const { loading } = useAuth();
+  const { loading, user } = useAuth();
   const [hasChecked, setHasChecked] = React.useState(false);
 
   React.useEffect(() => {
     if (!loading) {
       setHasChecked(true);
       if (!isAuthenticated) {
-        router.push(redirectTo);
+        const defaultRedirect = requiredRole === 'admin' ? '/admin/login' : '/login';
+        router.push(redirectTo || defaultRedirect);
+      } else if (requiredRole && user?.role !== requiredRole) {
+        // Redirect to appropriate page based on user role
+        if (user?.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else {
+          router.push('/');
+        }
       }
     }
-  }, [isAuthenticated, loading, router, redirectTo]);
+  }, [isAuthenticated, loading, router, redirectTo, requiredRole, user]);
 
   // Show loading while checking authentication
   if (loading || !hasChecked) {
@@ -40,6 +50,11 @@ export function AuthGuard({
 
   // Show nothing if not authenticated (will redirect)
   if (!isAuthenticated) {
+    return null;
+  }
+
+  // Check role if required
+  if (requiredRole && user?.role !== requiredRole) {
     return null;
   }
 

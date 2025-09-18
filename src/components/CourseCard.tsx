@@ -35,7 +35,7 @@ export function CourseCard({ course, showPreview = true }: CourseCardProps) {
   };
 
   const formatRating = (rating: number) => {
-    return rating.toFixed(1);
+    return Number(rating || 0).toFixed(1);
   };
 
   const getLevelColor = (level: string) => {
@@ -67,13 +67,31 @@ export function CourseCard({ course, showPreview = true }: CourseCardProps) {
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <div className="relative aspect-video overflow-hidden">
-        <Image
-          src={course.thumbnail}
-          alt={course.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
+        {course.thumbnail ? (
+          course.thumbnail.startsWith('data:') || course.thumbnail.startsWith('iVBORw0KGgo') ? (
+            <img
+              src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/png;base64,${course.thumbnail}`}
+              alt={course.title}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <Image
+              src={course.thumbnail}
+              alt={course.title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          )
+        ) : (
+          <Image
+            src="/img/thumb.jpg"
+            alt={course.title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        )}
         
         {/* Level Badge */}
         <div className="absolute top-3 left-3">
@@ -111,7 +129,7 @@ export function CourseCard({ course, showPreview = true }: CourseCardProps) {
           {/* Instructor */}
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-2">
-              {course.instructor.avatar ? (
+              {course.instructor?.avatar ? (
                 <Image
                   src={course.instructor.avatar}
                   alt={course.instructor.name}
@@ -125,7 +143,7 @@ export function CourseCard({ course, showPreview = true }: CourseCardProps) {
                 </div>
               )}
               <span className="text-sm text-muted-foreground">
-                {course.instructor.name}
+                {course.instructor?.name || 'Bilinmeyen Eğitmen'}
               </span>
             </div>
           </div>

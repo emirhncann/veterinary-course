@@ -10,8 +10,20 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AuthGuard } from '@/components/AuthGuard';
 import { VideoPlayer } from '@/components/VideoPlayer';
-import { apiFetch, createMockResponse, isDevelopment } from '@/lib/fetcher';
+import { apiFetch } from '@/lib/fetcher';
 import type { Course, Lesson } from '@/types/api';
+
+// Static params for export
+export async function generateStaticParams() {
+  return [
+    { courseId: '1', lessonId: '1' },
+    { courseId: '1', lessonId: '2' },
+    { courseId: '1', lessonId: '3' },
+    { courseId: '2', lessonId: '1' },
+    { courseId: '2', lessonId: '2' },
+    { courseId: '3', lessonId: '1' },
+  ];
+}
 
 // Mock data for development
 const mockCourse: Course = {
@@ -99,13 +111,6 @@ const mockCourse: Course = {
 };
 
 async function getCourse(courseId: string): Promise<Course | null> {
-  if (isDevelopment) {
-    if (courseId === '1') {
-      return createMockResponse(mockCourse, 500);
-    }
-    return null;
-  }
-
   try {
     const response = await apiFetch<Course>(`/courses/${courseId}`);
     return response;

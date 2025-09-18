@@ -4,7 +4,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiFetch, createMockResponse, isDevelopment } from '@/lib/fetcher';
+import { apiFetch } from '@/lib/fetcher';
 import type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types/api';
 
 interface AuthState {
@@ -24,15 +24,7 @@ interface AuthActions {
 
 type AuthStore = AuthState & AuthActions;
 
-// Mock data for development
-const mockUser: User = {
-  id: '1',
-  name: 'Test Kullanıcı',
-  email: 'test@example.com',
-  role: 'student',
-  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
-  createdAt: new Date().toISOString(),
-};
+// Mock data kaldırıldı - artık sadece gerçek API kullanılıyor
 
 export const useAuth = create<AuthStore>()(
   persist(
@@ -47,21 +39,25 @@ export const useAuth = create<AuthStore>()(
         set({ loading: true, error: null });
         
         try {
-          if (isDevelopment) {
-            // Mock login for development
-            await createMockResponse({ user: mockUser }, 1000);
-            set({ user: mockUser, loading: false });
-            return;
-          }
-
-          const response = await apiFetch<AuthResponse>('/auth/login', {
+          console.log('🔐 API call to /login with credentials:', credentials);
+          const response = await apiFetch<{ status: string; message: string; user: User }>('/login', {
             method: 'POST',
             body: credentials,
           });
 
-          set({ user: response.user, loading: false });
+          console.log('🔐 API response:', response);
+
+          if (response.status === 'success') {
+            console.log('🔐 Giriş başarılı! Kullanıcı bilgileri:', response.user);
+            set({ user: response.user, loading: false });
+          } else {
+            console.error('❌ Login failed with status:', response.status, 'message:', response.message);
+            throw new Error(response.message || 'Giriş başarısız');
+          }
         } catch (error) {
+          console.error('❌ Login API error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Giriş yapılırken bir hata oluştu';
+          console.error('❌ Final error message:', errorMessage);
           set({ error: errorMessage, loading: false });
           throw error;
         }
@@ -71,19 +67,17 @@ export const useAuth = create<AuthStore>()(
         set({ loading: true, error: null });
         
         try {
-          if (isDevelopment) {
-            // Mock register for development
-            await createMockResponse({ user: mockUser }, 1000);
-            set({ user: mockUser, loading: false });
-            return;
-          }
-
-          const response = await apiFetch<AuthResponse>('/auth/register', {
+          const response = await apiFetch<{ status: string; message: string; user: User }>('/register', {
             method: 'POST',
             body: data,
           });
 
-          set({ user: response.user, loading: false });
+          if (response.status === 'success') {
+            console.log('📝 Kayıt başarılı! Kullanıcı bilgileri:', response.user);
+            set({ user: response.user, loading: false });
+          } else {
+            throw new Error(response.message || 'Kayıt başarısız');
+          }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Kayıt olurken bir hata oluştu';
           set({ error: errorMessage, loading: false });
@@ -95,17 +89,10 @@ export const useAuth = create<AuthStore>()(
         set({ loading: true, error: null });
         
         try {
-          if (isDevelopment) {
-            // Mock logout for development
-            await createMockResponse({}, 500);
-            set({ user: null, loading: false });
-            return;
-          }
-
-          await apiFetch('/auth/logout', {
+          await apiFetch('/logout', {
             method: 'POST',
           });
-
+          
           set({ user: null, loading: false });
         } catch (error) {
           // Logout hatası olsa bile kullanıcıyı çıkar
@@ -117,15 +104,12 @@ export const useAuth = create<AuthStore>()(
         set({ loading: true, error: null });
         
         try {
-          if (isDevelopment) {
-            // Mock hydrate for development
-            await createMockResponse({ user: mockUser }, 500);
-            set({ user: mockUser, loading: false });
-            return;
+          const response = await apiFetch<{ status: string; user: User }>('/me');
+          if (response.status === 'success') {
+            set({ user: response.user, loading: false });
+          } else {
+            set({ user: null, loading: false });
           }
-
-          const response = await apiFetch<AuthResponse>('/auth/me');
-          set({ user: response.user, loading: false });
         } catch (error) {
           // Hydrate hatası durumunda kullanıcıyı null yap
           set({ user: null, loading: false });

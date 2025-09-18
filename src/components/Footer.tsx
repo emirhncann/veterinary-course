@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { BookOpen, Github, Twitter, Mail } from 'lucide-react';
+import { Github, Twitter, Mail } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 export function Footer() {
   return (
@@ -8,9 +9,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <BookOpen className="h-6 w-6" />
-              <span className="font-bold text-xl">KursPlatform</span>
+            <Link href="/" className="flex items-center">
+              <Logo width={40} height={40} />
             </Link>
             <p className="text-sm text-muted-foreground">
               Modern ve etkili online eğitim platformu. 

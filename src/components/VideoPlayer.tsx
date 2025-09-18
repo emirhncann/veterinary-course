@@ -131,21 +131,19 @@ export function VideoPlayer({ courseId, lessonId, videoUrl, title }: VideoPlayer
 
   const handleMouseMove = () => {
     setShowControls(true);
-    clearTimeout(controlsTimeout);
+    clearTimeout(controlsTimeout.current);
     const timeout = setTimeout(() => setShowControls(false), 3000);
-    return timeout;
+    controlsTimeout.current = timeout;
   };
 
-  const controlsTimeout = React.useRef<NodeJS.Timeout>();
+  const controlsTimeout = React.useRef<NodeJS.Timeout | undefined>(undefined);
 
   React.useEffect(() => {
-    const timeout = handleMouseMove();
-    controlsTimeout.current = timeout;
-    return () => clearTimeout(timeout);
+    handleMouseMove();
+    return () => clearTimeout(controlsTimeout.current);
   }, []);
 
   // Mock video for development (since we don't have real video URLs)
-  const isDevelopment = process.env.NODE_ENV === 'development';
   const mockVideoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
   return (
@@ -162,13 +160,9 @@ export function VideoPlayer({ courseId, lessonId, videoUrl, title }: VideoPlayer
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
-        poster={isDevelopment ? undefined : videoUrl}
+        poster={videoUrl}
       >
-        {isDevelopment ? (
-          <source src={mockVideoUrl} type="video/mp4" />
-        ) : (
-          <source src={videoUrl} type="video/mp4" />
-        )}
+        <source src={videoUrl} type="video/mp4" />
         Tarayıcınız video oynatmayı desteklemiyor.
       </video>
 

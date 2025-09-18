@@ -6,32 +6,50 @@ import { z } from 'zod';
 
 // Auth Validators
 export const loginSchema = z.object({
-  email: z
+  identifier: z
     .string()
-    .min(1, 'E-posta adresi gerekli')
-    .email('Geçerli bir e-posta adresi girin'),
+    .min(1, 'E-posta, TC Kimlik No veya telefon numarası gerekli'),
   password: z
     .string()
     .min(1, 'Şifre gerekli')
-    .min(6, 'Şifre en az 6 karakter olmalı'),
+    .min(8, 'Şifre en az 8 karakter olmalı'),
 });
 
 export const registerSchema = z.object({
-  name: z
+  first_name: z
     .string()
     .min(1, 'Ad gerekli')
     .min(2, 'Ad en az 2 karakter olmalı')
     .max(50, 'Ad en fazla 50 karakter olabilir'),
+  last_name: z
+    .string()
+    .min(1, 'Soyad gerekli')
+    .min(2, 'Soyad en az 2 karakter olmalı')
+    .max(50, 'Soyad en fazla 50 karakter olabilir'),
   email: z
     .string()
     .min(1, 'E-posta adresi gerekli')
-    .email('Geçerli bir e-posta adresi girin'),
+    .email('Geçerli bir e-posta adresi girin')
+    .max(150, 'E-posta en fazla 150 karakter olabilir'),
   password: z
     .string()
     .min(1, 'Şifre gerekli')
-    .min(6, 'Şifre en az 6 karakter olmalı')
-    .max(100, 'Şifre en fazla 100 karakter olabilir'),
+    .min(8, 'Şifre en az 8 karakter olmalı')
+    .max(255, 'Şifre en fazla 255 karakter olabilir'),
   confirmPassword: z.string().min(1, 'Şifre tekrarı gerekli'),
+  national_id: z
+    .string()
+    .min(1, 'TC Kimlik No gerekli')
+    .length(11, 'TC Kimlik No 11 haneli olmalı')
+    .regex(/^[0-9]+$/, 'TC Kimlik No sadece rakam içermelidir'),
+  phone: z
+    .string()
+    .min(1, 'Telefon numarası gerekli')
+    .length(11, 'Telefon numarası 11 haneli olmalı')
+    .regex(/^[0-9]+$/, 'Telefon numarası sadece rakam içermelidir'),
+  address: z
+    .string()
+    .optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Şifreler eşleşmiyor',
   path: ['confirmPassword'],

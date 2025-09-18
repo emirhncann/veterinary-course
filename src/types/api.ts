@@ -4,12 +4,16 @@
 
 // Auth Types
 export interface User {
-  id: string;
-  name: string;
+  id: number;
+  first_name: string;
+  last_name: string;
   email: string;
-  role: 'student' | 'instructor' | 'admin';
+  national_id: string;
+  phone: string;
+  address?: string;
+  role?: 'student' | 'instructor' | 'admin';
   avatar?: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export interface AuthResponse {
@@ -17,14 +21,18 @@ export interface AuthResponse {
 }
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
+  national_id: string;
+  phone: string;
+  address?: string;
 }
 
 // Course Types
@@ -176,5 +184,5 @@ export interface PaginationParams {
 export interface ApiError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }

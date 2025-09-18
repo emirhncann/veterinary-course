@@ -1,7 +1,10 @@
+'use client';
+
 import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { Star, Clock, Users, Play, CheckCircle, BookOpen, Award } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -11,186 +14,433 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StickyBuyBox } from '@/components/StickyBuyBox';
 import { Curriculum } from '@/components/Curriculum';
 import { ReviewList } from '@/components/ReviewList';
-import { apiFetch, createMockResponse, isDevelopment } from '@/lib/fetcher';
+import { apiFetch } from '@/lib/fetcher';
 import type { Course } from '@/types/api';
 
-// Mock data for development
-const mockCourse: Course = {
-  id: '1',
-  slug: 'react-js-temelleri',
-  title: 'React.js Temelleri - Sıfırdan İleri Seviyeye',
-  summary: 'Modern web uygulamaları geliştirmek için React.js öğrenin. Hooks, Context API ve daha fazlası.',
-  description: `
-    Bu kapsamlı React.js kursunda, modern web uygulamaları geliştirmek için ihtiyacınız olan tüm temel ve ileri seviye konuları öğreneceksiniz. 
+// Static params for export
+export async function generateStaticParams() {
+  return [
+    { slug: 'kucuk-hayvan-cerrahisi' },
+    { slug: 'buyuk-hayvan-hastaliklari' },
+    { slug: 'veteriner-radyoloji' },
+    { slug: 'veteriner-anestezi' },
+    { slug: 'veteriner-patoloji' },
+    { slug: 'veteriner-farmakoloji' },
+  ];
+}
 
-    **Kurs İçeriği:**
-    - React.js temelleri ve JSX
-    - Component yapısı ve props
-    - State yönetimi (useState, useEffect)
-    - Hooks (custom hooks dahil)
-    - Context API ve state management
-    - Routing (React Router)
-    - Form handling ve validation
-    - API entegrasyonu
-    - Testing (Jest, React Testing Library)
-    - Deployment ve production optimizasyonu
+// Client-side course data fetching hook
+function useCourse() {
+  const params = useParams();
+  const router = useRouter();
+  const slug = params.slug as string;
+  
+  const [course, setCourse] = useState<Course | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-    **Bu kursu tamamladığınızda:**
-    - React.js ile modern web uygulamaları geliştirebileceksiniz
-    - Component-based architecture anlayışına sahip olacaksınız
-    - State management çözümlerini uygulayabileceksiniz
-    - Real-world projeler geliştirebileceksiniz
-  `,
-  price: 299,
-  thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=450&fit=crop',
-  level: 'beginner',
-  language: 'Türkçe',
-  rating: 4.8,
-  totalLessons: 45,
-  duration: 1200,
-  instructor: {
-    name: 'Ahmet Yılmaz',
-    bio: '10+ yıllık deneyime sahip full-stack developer. React, Node.js ve modern web teknolojileri konularında uzman.',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+  useEffect(() => {
+    const fetchCourse = async () => {
+      setLoading(true);
+      try {
+        const response = await apiFetch<Course>(`/courses/${slug}`);
+        setCourse(response);
+      } catch (error) {
+        console.error('Error fetching course:', error);
+        // API başarısız olursa mock data kullan
+        const mockCourse = mockCourses[slug];
+        if (mockCourse) {
+          setCourse(mockCourse);
+        } else {
+          setNotFound(true);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (slug) {
+      fetchCourse();
+    }
+  }, [slug]);
+
+  return { course, loading, notFound };
+}
+
+// Mock courses data for static export
+const mockCourses: { [key: string]: Course } = {
+  'kucuk-hayvan-cerrahisi': {
+    id: '1',
+    slug: 'kucuk-hayvan-cerrahisi',
+    title: 'Küçük Hayvan Cerrahisi - Temel İlkeler',
+    summary: 'Küçük hayvan cerrahisinin temel prensipleri ve pratik uygulamaları. Sterilizasyon, anestezi ve cerrahi teknikler.',
+    description: `
+      Bu kapsamlı küçük hayvan cerrahisi kursunda, veteriner hekimlik pratiğinde sıkça karşılaştığınız cerrahi vakaları öğreneceksiniz.
+
+      **Kurs İçeriği:**
+      - Cerrahi ekipman ve aletler
+      - Sterilizasyon teknikleri
+      - Anestezi protokolleri
+      - Yumuşak doku cerrahisi
+      - Ortopedik cerrahi temelleri
+      - Post-operatif bakım
+      - Komplikasyon yönetimi
+      - Cerrahi teknikler ve dikişler
+
+      **Bu kursu tamamladığınızda:**
+      - Temel cerrahi prosedürleri uygulayabileceksiniz
+      - Anestezi protokollerini güvenle kullanabileceksiniz
+      - Cerrahi komplikasyonları yönetebileceksiniz
+      - Modern cerrahi teknikleri uygulayabileceksiniz
+    `,
+    price: 299,
+    thumbnail: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=800&h=450&fit=crop',
+    level: 'intermediate',
+    language: 'Türkçe',
+    rating: 4.8,
+    totalLessons: 45,
+    duration: 1200,
+    instructor: {
+      name: 'Prof. Dr. Mehmet Yılmaz',
+      bio: '20+ yıllık deneyime sahip veteriner cerrah. Küçük hayvan cerrahisi alanında uzman.',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+    },
+    sections: [
+      {
+        id: '1',
+        title: 'Cerrahi Temelleri',
+        lessons: [
+          {
+            id: '1',
+            title: 'Cerrahi Ekipman ve Aletler',
+            duration: 25,
+            preview: true,
+            description: 'Cerrahi aletlerin tanıtımı ve kullanımı',
+          },
+          {
+            id: '2',
+            title: 'Sterilizasyon Teknikleri',
+            duration: 30,
+            preview: true,
+            description: 'Otoklavlama ve kimyasal sterilizasyon',
+          },
+          {
+            id: '3',
+            title: 'Cerrahi Alan Hazırlığı',
+            duration: 20,
+            preview: false,
+            description: 'Hasta hazırlığı ve cerrahi alan sterilizasyonu',
+          },
+        ],
+      },
+    ],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T15:30:00Z',
   },
-  sections: [
-    {
-      id: '1',
-      title: 'React.js Temelleri',
-      lessons: [
-        {
-          id: '1',
-          title: 'React.js Nedir ve Neden Kullanılır?',
-          duration: 15,
-          preview: true,
-          description: 'React.js kütüphanesinin temel kavramları ve avantajları',
-        },
-        {
-          id: '2',
-          title: 'Geliştirme Ortamının Kurulumu',
-          duration: 20,
-          preview: true,
-          description: 'Node.js, npm ve Create React App kurulumu',
-        },
-        {
-          id: '3',
-          title: 'İlk React Uygulaması',
-          duration: 25,
-          preview: false,
-          description: 'Hello World uygulaması oluşturma',
-        },
-      ],
+  'buyuk-hayvan-hastaliklari': {
+    id: '2',
+    slug: 'buyuk-hayvan-hastaliklari',
+    title: 'Büyük Hayvan Hastalıkları ve Tedavisi',
+    summary: 'Sığır, at ve koyun hastalıklarının tanı ve tedavi yöntemleri. Klinik muayene teknikleri.',
+    description: `
+      Büyük hayvan hastalıkları alanında uzmanlaşmak için kapsamlı eğitim programı.
+
+      **Kurs İçeriği:**
+      - Büyük hayvan anatomisi
+      - Klinik muayene teknikleri
+      - Sığır hastalıkları
+      - At hastalıkları
+      - Koyun-keçi hastalıkları
+      - Üreme hastalıkları
+      - Beslenme bozuklukları
+      - Zoonoz hastalıklar
+
+      **Bu kursu tamamladığınızda:**
+      - Büyük hayvan muayenesi yapabileceksiniz
+      - Hastalık tanısı koyabileceksiniz
+      - Tedavi protokollerini uygulayabileceksiniz
+      - Halk sağlığı risklerini değerlendirebileceksiniz
+    `,
+    price: 399,
+    thumbnail: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=800&h=450&fit=crop',
+    level: 'advanced',
+    language: 'Türkçe',
+    rating: 4.9,
+    totalLessons: 60,
+    duration: 1800,
+    instructor: {
+      name: 'Prof. Dr. Ayşe Demir',
+      bio: '25+ yıllık büyük hayvan hastalıkları uzmanı. Saha deneyimi ve akademik kariyeri bulunan uzman veteriner.',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
     },
-    {
-      id: '2',
-      title: 'JSX ve Component Yapısı',
-      lessons: [
-        {
-          id: '4',
-          title: 'JSX Nedir ve Nasıl Kullanılır?',
-          duration: 30,
-          preview: true,
-          description: 'JSX syntax ve kuralları',
-        },
-        {
-          id: '5',
-          title: 'Functional Component Oluşturma',
-          duration: 35,
-          preview: false,
-          description: 'İlk functional component yazımı',
-        },
-        {
-          id: '6',
-          title: 'Props Kullanımı',
-          duration: 40,
-          preview: false,
-          description: 'Component\'lere veri geçirme',
-        },
-      ],
+    sections: [
+      {
+        id: '1',
+        title: 'Büyük Hayvan Muayenesi',
+        lessons: [
+          {
+            id: '1',
+            title: 'Klinik Muayene Teknikleri',
+            duration: 40,
+            preview: true,
+            description: 'Büyük hayvan muayene protokolleri',
+          },
+        ],
+      },
+    ],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T15:30:00Z',
+  },
+  'veteriner-radyoloji': {
+    id: '3',
+    slug: 'veteriner-radyoloji',
+    title: 'Veteriner Radyoloji - Görüntüleme Teknikleri',
+    summary: 'X-ray, ultrasonografi ve ileri görüntüleme yöntemleri. Radyolojik bulgular ve yorumlama.',
+    description: `
+      Veteriner radyoloji alanında uzmanlaşmak için kapsamlı görüntüleme eğitimi.
+
+      **Kurs İçeriği:**
+      - X-ray teknikleri
+      - Ultrasonografi
+      - CT ve MRI temelleri
+      - Radyolojik bulgular
+      - Görüntü yorumlama
+      - Radyasyon güvenliği
+      - Kontrast madde kullanımı
+      - Dijital görüntüleme
+
+      **Bu kursu tamamladığınızda:**
+      - X-ray çekimi yapabileceksiniz
+      - Ultrason muayenesi gerçekleştirebileceksiniz
+      - Radyolojik bulguları yorumlayabileceksiniz
+      - İleri görüntüleme yöntemlerini kullanabileceksiniz
+    `,
+    price: 449,
+    thumbnail: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=450&fit=crop',
+    level: 'intermediate',
+    language: 'Türkçe',
+    rating: 4.7,
+    totalLessons: 35,
+    duration: 900,
+    instructor: {
+      name: 'Doç. Dr. Can Özkan',
+      bio: 'Veteriner radyoloji uzmanı. 15+ yıllık deneyim ve ileri görüntüleme teknikleri konusunda uzman.',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
     },
-    {
-      id: '3',
-      title: 'State Yönetimi',
-      lessons: [
-        {
-          id: '7',
-          title: 'useState Hook',
-          duration: 45,
-          preview: false,
-          description: 'Component state yönetimi',
-        },
-        {
-          id: '8',
-          title: 'useEffect Hook',
-          duration: 50,
-          preview: false,
-          description: 'Side effect yönetimi',
-        },
-        {
-          id: '9',
-          title: 'Custom Hooks',
-          duration: 55,
-          preview: false,
-          description: 'Kendi hook\'larınızı yazma',
-        },
-      ],
+    sections: [
+      {
+        id: '1',
+        title: 'Görüntüleme Temelleri',
+        lessons: [
+          {
+            id: '1',
+            title: 'X-ray Teknikleri',
+            duration: 35,
+            preview: true,
+            description: 'X-ray çekimi ve pozisyonlama',
+          },
+        ],
+      },
+    ],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T15:30:00Z',
+  },
+  'veteriner-anestezi': {
+    id: '4',
+    slug: 'veteriner-anestezi',
+    title: 'Veteriner Anestezi ve Yoğun Bakım',
+    summary: 'Anestezi protokolleri, monitörizasyon ve yoğun bakım prensipleri. Güvenli anestezi uygulamaları.',
+    description: `
+      Veteriner anestezi ve yoğun bakım alanında uzmanlaşmak için kapsamlı eğitim.
+
+      **Kurs İçeriği:**
+      - Anestezi protokolleri
+      - Premedikasyon
+      - İndüksiyon teknikleri
+      - Anestezi monitörizasyonu
+      - Yoğun bakım prensipleri
+      - Anestezi komplikasyonları
+      - Ağrı yönetimi
+      - Kardiyopulmoner resüsitasyon
+
+      **Bu kursu tamamladığınızda:**
+      - Güvenli anestezi uygulayabileceksiniz
+      - Anestezi monitörizasyonu yapabileceksiniz
+      - Komplikasyonları yönetebileceksiniz
+      - Yoğun bakım hastalarını takip edebileceksiniz
+    `,
+    price: 349,
+    thumbnail: 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=800&h=450&fit=crop',
+    level: 'advanced',
+    language: 'Türkçe',
+    rating: 4.8,
+    totalLessons: 50,
+    duration: 1500,
+    instructor: {
+      name: 'Dr. Elif Kaya',
+      bio: 'Veteriner anestezi uzmanı. 12+ yıllık anestezi ve yoğun bakım deneyimi.',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
     },
-  ],
-  createdAt: '2024-01-15T10:00:00Z',
-  updatedAt: '2024-01-20T15:30:00Z',
+    sections: [
+      {
+        id: '1',
+        title: 'Anestezi Temelleri',
+        lessons: [
+          {
+            id: '1',
+            title: 'Anestezi Protokolleri',
+            duration: 45,
+            preview: true,
+            description: 'Anestezi planlaması ve protokol seçimi',
+          },
+        ],
+      },
+    ],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T15:30:00Z',
+  },
+  'veteriner-patoloji': {
+    id: '5',
+    slug: 'veteriner-patoloji',
+    title: 'Veteriner Patoloji - Hastalık Mekanizmaları',
+    summary: 'Patolojik değişiklikler ve hastalık süreçleri. Histopatoloji ve nekropsi teknikleri.',
+    description: `
+      Veteriner patoloji alanında uzmanlaşmak için kapsamlı hastalık mekanizmaları eğitimi.
+
+      **Kurs İçeriği:**
+      - Genel patoloji
+      - Hücresel değişiklikler
+      - İnflamasyon
+      - Nekropsi teknikleri
+      - Histopatoloji
+      - Özel patoloji
+      - Tümör patolojisi
+      - Mikroskopi teknikleri
+
+      **Bu kursu tamamladığınızda:**
+      - Nekropsi yapabileceksiniz
+      - Histopatolojik değerlendirme yapabileceksiniz
+      - Hastalık mekanizmalarını anlayabileceksiniz
+      - Patolojik tanı koyabileceksiniz
+    `,
+    price: 0,
+    thumbnail: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&h=450&fit=crop',
+    level: 'intermediate',
+    language: 'Türkçe',
+    rating: 4.9,
+    totalLessons: 40,
+    duration: 1200,
+    instructor: {
+      name: 'Prof. Dr. Zeynep Arslan',
+      bio: 'Veteriner patoloji uzmanı. 18+ yıllık patoloji ve histopatoloji deneyimi.',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
+    },
+    sections: [
+      {
+        id: '1',
+        title: 'Genel Patoloji',
+        lessons: [
+          {
+            id: '1',
+            title: 'Hücresel Değişiklikler',
+            duration: 40,
+            preview: true,
+            description: 'Hücresel adaptasyon ve hasar mekanizmaları',
+          },
+        ],
+      },
+    ],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T15:30:00Z',
+  },
+  'veteriner-farmakoloji': {
+    id: '6',
+    slug: 'veteriner-farmakoloji',
+    title: 'Veteriner Farmakoloji - İlaç Tedavisi',
+    summary: 'Veteriner ilaçları, dozaj hesaplamaları ve tedavi protokolleri. Klinik farmakoloji uygulamaları.',
+    description: `
+      Veteriner farmakoloji alanında uzmanlaşmak için kapsamlı ilaç tedavisi eğitimi.
+
+      **Kurs İçeriği:**
+      - Farmakokinetik
+      - Farmakodinamik
+      - İlaç dozaj hesaplamaları
+      - Antibiyotik kullanımı
+      - Analjezik ve antiinflamatuar ilaçlar
+      - Kardiyak ilaçlar
+      - İlaç etkileşimleri
+      - Toksikoloji
+
+      **Bu kursu tamamladığınızda:**
+      - Doğru ilaç seçimi yapabileceksiniz
+      - Dozaj hesaplamaları yapabileceksiniz
+      - İlaç etkileşimlerini değerlendirebileceksiniz
+      - Toksik vakaları yönetebileceksiniz
+    `,
+    price: 299,
+    thumbnail: 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&h=450&fit=crop',
+    level: 'beginner',
+    language: 'Türkçe',
+    rating: 4.6,
+    totalLessons: 30,
+    duration: 800,
+    instructor: {
+      name: 'Doç. Dr. Oğuzhan Yıldız',
+      bio: 'Veteriner farmakoloji uzmanı. 14+ yıllık ilaç tedavisi ve toksikoloji deneyimi.',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
+    },
+    sections: [
+      {
+        id: '1',
+        title: 'Farmakoloji Temelleri',
+        lessons: [
+          {
+            id: '1',
+            title: 'Farmakokinetik Prensipleri',
+            duration: 35,
+            preview: true,
+            description: 'İlaçların vücuttaki yolculuğu',
+          },
+        ],
+      },
+    ],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T15:30:00Z',
+  },
 };
 
-async function getCourse(slug: string): Promise<Course | null> {
-  if (isDevelopment) {
-    // Mock course data
-    if (slug === 'react-js-temelleri') {
-      return createMockResponse(mockCourse, 500);
-    }
-    return null;
+export default function CourseDetailPage() {
+  const { course, loading, notFound: courseNotFound } = useCourse();
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Kurs yükleniyor...</p>
+        </div>
+      </div>
+    );
   }
 
-  try {
-    const response = await apiFetch<Course>(`/courses/${slug}`);
-    return response;
-  } catch (error) {
-    console.error('Error fetching course:', error);
-    return null;
-  }
-}
-
-interface CourseDetailPageProps {
-  params: Promise<{
-    slug: string;
-  }>;
-}
-
-export async function generateMetadata({ params }: CourseDetailPageProps) {
-  const resolvedParams = await params;
-  const course = await getCourse(resolvedParams.slug);
-  
-  if (!course) {
-    return {
-      title: 'Kurs Bulunamadı',
-    };
-  }
-
-  return {
-    title: `${course.title} - KursPlatform`,
-    description: course.summary,
-    openGraph: {
-      title: course.title,
-      description: course.summary,
-      images: [course.thumbnail],
-    },
-  };
-}
-
-export default async function CourseDetailPage({ params }: CourseDetailPageProps) {
-  const resolvedParams = await params;
-  const course = await getCourse(resolvedParams.slug);
-
-  if (!course) {
-    notFound();
+  if (courseNotFound || !course) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Kurs Bulunamadı
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            Aradığınız kurs mevcut değil veya kaldırılmış olabilir.
+          </p>
+          <Button asChild>
+            <Link href="/courses">
+              Tüm Kursları Görüntüle
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const formatPrice = (price: number) => {
@@ -263,7 +513,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
             <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span>{course.rating.toFixed(1)}</span>
+                <span>{Number(course.rating || 0).toFixed(1)}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />

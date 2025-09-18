@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand';
-import { apiFetch, createMockResponse, isDevelopment } from '@/lib/fetcher';
+import { apiFetch } from '@/lib/fetcher';
 import type { PlayerProgress, PlayerProgressRequest } from '@/types/api';
 
 interface PlayerState {
@@ -42,23 +42,6 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
     set({ loading: true, error: null });
     
     try {
-      if (isDevelopment) {
-        // Mock progress update for development
-        await createMockResponse({}, 300);
-        
-        set((state) => ({
-          progress: {
-            ...state.progress,
-            [data.lessonId]: {
-              positionSec: data.positionSec,
-              completed: data.completed,
-            },
-          },
-          loading: false,
-        }));
-        return;
-      }
-
       await apiFetch('/player/progress', {
         method: 'POST',
         body: data,
@@ -85,26 +68,6 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
     set({ loading: true, error: null });
     
     try {
-      if (isDevelopment) {
-        // Mock progress fetch for development
-        const mockProgress: PlayerProgress = {
-          positionSec: 0,
-          completed: false,
-        };
-        
-        await createMockResponse(mockProgress, 300);
-        
-        set((state) => ({
-          progress: {
-            ...state.progress,
-            [lessonId]: mockProgress,
-          },
-          loading: false,
-        }));
-        
-        return mockProgress;
-      }
-
       const response = await apiFetch<PlayerProgress>('/player/progress', {
         method: 'GET',
         // URL params would be handled by the backend

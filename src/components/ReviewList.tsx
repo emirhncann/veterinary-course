@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { apiFetch, createMockResponse, isDevelopment } from '@/lib/fetcher';
+import { apiFetch } from '@/lib/fetcher';
 import type { Review, ReviewsResponse } from '@/types/api';
 
 interface ReviewListProps {
@@ -34,7 +34,7 @@ const mockReviews: Review[] = [
     userId: '2',
     user: {
       name: 'Ayşe Demir',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face',
     },
     rating: 4,
     comment: 'Çok faydalı bir kurs. Başlangıç seviyesinde olanlar için ideal. Biraz daha ileri konular da eklenebilir.',
@@ -61,10 +61,6 @@ const mockReviewsResponse: ReviewsResponse = {
 };
 
 async function getReviews(courseId: string): Promise<ReviewsResponse> {
-  if (isDevelopment) {
-    return createMockResponse(mockReviewsResponse, 500);
-  }
-
   try {
     const response = await apiFetch<ReviewsResponse>(`/reviews?courseId=${courseId}`);
     return response;

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { Logo } from '@/components/Logo';
 import { useAuth, useUser } from '@/lib/stores/useAuth';
 
 const navigation = [
@@ -38,11 +39,10 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-20 items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <BookOpen className="h-6 w-6" />
-          <span className="font-bold text-xl">KursPlatform</span>
+        <Link href="/" className="flex items-center">
+          <Logo width={160} height={80} />
         </Link>
 
         {/* Desktop Navigation */}
@@ -73,7 +73,7 @@ export function Navbar() {
                   {user.avatar ? (
                     <img
                       src={user.avatar}
-                      alt={user.name}
+                      alt={`${user.first_name} ${user.last_name}`}
                       className="h-8 w-8 rounded-full"
                     />
                   ) : (
@@ -84,7 +84,7 @@ export function Navbar() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user.name}</p>
+                    <p className="font-medium">{user.first_name} {user.last_name}</p>
                     <p className="w-[200px] truncate text-sm text-muted-foreground">
                       {user.email}
                     </p>
@@ -97,6 +97,11 @@ export function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link href="/library">Kitaplığım</Link>
                 </DropdownMenuItem>
+                {user.role === 'admin' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/dashboard">Admin Panel</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -128,6 +133,10 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="right">
               <div className="flex flex-col space-y-4 mt-8">
+                {/* Mobile Logo */}
+                <div className="mb-4">
+                  <Logo width={80} height={80} />
+                </div>
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
@@ -150,14 +159,14 @@ export function Navbar() {
                         {user.avatar ? (
                           <img
                             src={user.avatar}
-                            alt={user.name}
+                            alt={`${user.first_name} ${user.last_name}`}
                             className="h-10 w-10 rounded-full"
                           />
                         ) : (
                           <User className="h-10 w-10 rounded-full bg-muted p-2" />
                         )}
                         <div>
-                          <p className="font-medium">{user.name}</p>
+                          <p className="font-medium">{user.first_name} {user.last_name}</p>
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>

@@ -136,7 +136,7 @@ export function CourseFilters({ initialFilters }: CourseFiltersProps) {
           <label className="block text-sm font-medium mb-2">Sıralama</label>
           <Select
             value={initialFilters.sort || 'default'}
-            onValueChange={(value) => updateFilters({ sort: value === 'default' ? undefined : value })}
+            onValueChange={(value) => updateFilters({ sort: value === 'default' ? undefined : value as 'newest' | 'oldest' | 'price_asc' | 'price_desc' | 'rating' })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Varsayılan" />
@@ -160,7 +160,7 @@ export function CourseFilters({ initialFilters }: CourseFiltersProps) {
           
           {initialFilters.q && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Arama: "{initialFilters.q}"
+              Arama: &quot;{initialFilters.q}&quot;
               <button
                 onClick={() => {
                   setSearchQuery('');

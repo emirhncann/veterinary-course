@@ -12,8 +12,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AuthGuard } from '@/components/AuthGuard';
-import { apiFetch, createMockResponse, isDevelopment } from '@/lib/fetcher';
+import { apiFetch } from '@/lib/fetcher';
 import type { Course, OrderRequest, OrderResponse } from '@/types/api';
+
+// Static params for export
+export async function generateStaticParams() {
+  return [
+    { courseId: '1' },
+    { courseId: '2' },
+    { courseId: '3' },
+    { courseId: '4' },
+    { courseId: '5' },
+    { courseId: '6' },
+  ];
+}
 
 // Mock data for development
 const mockCourse: Course = {
@@ -40,13 +52,6 @@ const mockCourse: Course = {
 };
 
 async function getCourse(courseId: string): Promise<Course | null> {
-  if (isDevelopment) {
-    if (courseId === '1') {
-      return createMockResponse(mockCourse, 500);
-    }
-    return null;
-  }
-
   try {
     const response = await apiFetch<Course>(`/courses/${courseId}`);
     return response;
@@ -57,14 +62,6 @@ async function getCourse(courseId: string): Promise<Course | null> {
 }
 
 async function createOrder(orderData: OrderRequest): Promise<OrderResponse> {
-  if (isDevelopment) {
-    // Mock successful order
-    return createMockResponse({
-      orderId: 'order_' + Date.now(),
-      status: 'paid',
-    }, 2000);
-  }
-
   try {
     const response = await apiFetch<OrderResponse>('/orders', {
       method: 'POST',

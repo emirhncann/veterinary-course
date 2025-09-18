@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Tamamen static export - client-side only
+  output: 'export',
+  trailingSlash: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -23,6 +27,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Static export için gerekli ayarlar
+  distDir: 'out',
 };
 
 export default nextConfig;

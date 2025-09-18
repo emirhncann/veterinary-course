@@ -1,5 +1,8 @@
+'use client';
+
 import * as React from 'react';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, Filter, SortAsc } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
@@ -8,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CourseGrid } from '@/components/CourseGrid';
 import { CourseFilters } from '@/components/CourseFilters';
-import { apiFetch, createMockResponse, isDevelopment } from '@/lib/fetcher';
+import { apiFetch } from '@/lib/fetcher';
 import type { CourseListItem, CourseFilters as CourseFiltersType } from '@/types/api';
 
 // Mock data for development
@@ -44,7 +47,7 @@ const mockCourses: CourseListItem[] = [
     duration: 1800,
     instructor: {
       name: 'Elif Demir',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face',
     },
   },
   {
@@ -151,97 +154,53 @@ const mockCourses: CourseListItem[] = [
   },
 ];
 
-async function getCourses(filters: CourseFiltersType): Promise<{ items: CourseListItem[]; total: number }> {
-  if (isDevelopment) {
-    // Mock filtering logic
-    let filteredCourses = [...mockCourses];
-    
-    if (filters.q) {
-      const query = filters.q.toLowerCase();
-      filteredCourses = filteredCourses.filter(course => 
-        course.title.toLowerCase().includes(query) ||
-        course.summary.toLowerCase().includes(query) ||
-        course.instructor.name.toLowerCase().includes(query)
-      );
-    }
-    
-    if (filters.level) {
-      filteredCourses = filteredCourses.filter(course => course.level === filters.level);
-    }
-    
-    if (filters.price === 'free') {
-      filteredCourses = filteredCourses.filter(course => course.price === 0);
-    } else if (filters.price === 'paid') {
-      filteredCourses = filteredCourses.filter(course => course.price > 0);
-    }
-    
-    if (filters.language) {
-      filteredCourses = filteredCourses.filter(course => course.language === filters.language);
-    }
-    
-    // Mock sorting
-    if (filters.sort) {
-      switch (filters.sort) {
-        case 'newest':
-          // Mock: reverse order
-          filteredCourses.reverse();
-          break;
-        case 'price_asc':
-          filteredCourses.sort((a, b) => a.price - b.price);
-          break;
-        case 'price_desc':
-          filteredCourses.sort((a, b) => b.price - a.price);
-          break;
-        case 'rating':
-          filteredCourses.sort((a, b) => b.rating - a.rating);
-          break;
-      }
-    }
-    
-    return createMockResponse({
-      items: filteredCourses,
-      total: filteredCourses.length,
-    }, 500);
-  }
+// Client-side data fetching hook
+function useCourses() {
+  const searchParams = useSearchParams();
+  const [courses, setCourses] = useState<CourseListItem[]>(mockCourses);
+  const [total, setTotal] = useState(mockCourses.length);
+  const [loading, setLoading] = useState(true);
 
-  try {
-    const searchParams = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) searchParams.append(key, value.toString());
-    });
-    
-    const response = await apiFetch<{ items: CourseListItem[]; total: number }>(`/courses?${searchParams}`);
-    return response;
-  } catch (error) {
-    console.error('Error fetching courses:', error);
-    return { items: [], total: 0 };
-  }
-}
-
-interface CoursesPageProps {
-  searchParams: Promise<{
-    q?: string;
-    level?: string;
-    price?: string;
-    language?: string;
-    sort?: string;
-    page?: string;
-  }>;
-}
-
-export default async function CoursesPage({ searchParams }: CoursesPageProps) {
-  const resolvedSearchParams = await searchParams;
   const filters: CourseFiltersType = {
-    q: resolvedSearchParams.q,
-    level: resolvedSearchParams.level as any,
-    price: resolvedSearchParams.price as any,
-    language: resolvedSearchParams.language,
-    sort: resolvedSearchParams.sort as any,
-    page: resolvedSearchParams.page ? parseInt(resolvedSearchParams.page) : 1,
+    q: searchParams.get('q') || undefined,
+    level: (searchParams.get('level') as 'beginner' | 'intermediate' | 'advanced') || undefined,
+    price: (searchParams.get('price') as 'free' | 'paid') || undefined,
+    language: searchParams.get('language') || undefined,
+    sort: (searchParams.get('sort') as 'newest' | 'oldest' | 'price_asc' | 'price_desc' | 'rating') || undefined,
+    page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
     limit: 12,
   };
 
-  const { items: courses, total } = await getCourses(filters);
+  useEffect(() => {
+    const fetchCourses = async () => {
+      setLoading(true);
+      try {
+        const searchParamsStr = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) searchParamsStr.append(key, value.toString());
+        });
+        
+        const response = await apiFetch<{ items: CourseListItem[]; total: number }>(`/courses?${searchParamsStr}`);
+        setCourses(response.items);
+        setTotal(response.total);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        // API başarısız olursa mock data kullan
+        setCourses(mockCourses);
+        setTotal(mockCourses.length);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [searchParams]);
+
+  return { courses, total, loading, filters };
+}
+
+function CoursesContent() {
+  const { courses, total, loading, filters } = useCourses();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -265,9 +224,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<div>Yükleniyor...</div>}>
-              <CourseFilters initialFilters={filters} />
-            </Suspense>
+            <CourseFilters initialFilters={filters} />
           </CardContent>
         </Card>
       </div>
@@ -281,7 +238,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
             </h2>
             {filters.q && (
               <Badge variant="secondary">
-                Arama: "{filters.q}"
+                Arama: &quot;{filters.q}&quot;
               </Badge>
             )}
             {filters.level && (
@@ -297,9 +254,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
           </div>
         </div>
 
-        <Suspense fallback={<CourseGrid courses={[]} loading={true} />}>
-          <CourseGrid courses={courses} />
-        </Suspense>
+        <CourseGrid courses={courses} loading={loading} />
       </div>
 
       {/* Pagination would go here */}
@@ -311,5 +266,20 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CoursesPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Kurslar yükleniyor...</p>
+        </div>
+      </div>
+    }>
+      <CoursesContent />
+    </Suspense>
   );
 }

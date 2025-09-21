@@ -13,87 +13,6 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { apiFetch } from '@/lib/fetcher';
 import type { Enrollment, EnrollmentsResponse } from '@/types/api';
 
-// Mock data for development
-const mockEnrollments: Enrollment[] = [
-  {
-    id: '1',
-    courseId: '1',
-    course: {
-      id: '1',
-      slug: 'react-js-temelleri',
-      title: 'React.js Temelleri - Sıfırdan İleri Seviyeye',
-      summary: 'Modern web uygulamaları geliştirmek için React.js öğrenin. Hooks, Context API ve daha fazlası.',
-      price: 299,
-      thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=225&fit=crop',
-      level: 'beginner',
-      language: 'Türkçe',
-      rating: 4.8,
-      totalLessons: 45,
-      duration: 1200,
-      instructor: {
-        name: 'Ahmet Yılmaz',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
-      },
-    },
-    enrolledAt: '2024-01-15T10:00:00Z',
-    progress: 65,
-    lastLessonId: '7',
-  },
-  {
-    id: '2',
-    courseId: '2',
-    course: {
-      id: '2',
-      slug: 'python-veri-bilimi',
-      title: 'Python ile Veri Bilimi ve Makine Öğrenmesi',
-      summary: 'Pandas, NumPy, Matplotlib ve Scikit-learn ile veri analizi ve makine öğrenmesi projeleri.',
-      price: 399,
-      thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=225&fit=crop',
-      level: 'intermediate',
-      language: 'Türkçe',
-      rating: 4.9,
-      totalLessons: 60,
-      duration: 1800,
-      instructor: {
-        name: 'Elif Demir',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face',
-      },
-    },
-    enrolledAt: '2024-01-10T14:30:00Z',
-    progress: 30,
-    lastLessonId: '12',
-  },
-  {
-    id: '3',
-    courseId: '3',
-    course: {
-      id: '3',
-      slug: 'ui-ux-tasarim',
-      title: 'UI/UX Tasarım - Figma ile Modern Arayüz Tasarımı',
-      summary: 'Figma kullanarak profesyonel UI/UX tasarımları oluşturun. Kullanıcı deneyimi prensipleri.',
-      price: 249,
-      thumbnail: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=225&fit=crop',
-      level: 'beginner',
-      language: 'Türkçe',
-      rating: 4.7,
-      totalLessons: 35,
-      duration: 900,
-      instructor: {
-        name: 'Mehmet Kaya',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
-      },
-    },
-    enrolledAt: '2024-01-05T09:15:00Z',
-    progress: 100,
-    lastLessonId: '35',
-  },
-];
-
-const mockEnrollmentsResponse: EnrollmentsResponse = {
-  items: mockEnrollments,
-  total: 3,
-};
-
 async function getEnrollments(): Promise<EnrollmentsResponse> {
   try {
     const response = await apiFetch<EnrollmentsResponse>('/enrollments/me');
@@ -177,7 +96,6 @@ export default function LibraryPage() {
   return (
     <AuthGuard>
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Kitaplığım
@@ -187,57 +105,17 @@ export default function LibraryPage() {
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{allCourses.length}</div>
-                  <div className="text-sm text-muted-foreground">Toplam Kurs</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{completedCourses.length}</div>
-                  <div className="text-sm text-muted-foreground">Tamamlanan</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
-                  <Play className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{inProgressCourses.length}</div>
-                  <div className="text-sm text-muted-foreground">Devam Eden</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Courses Tabs */}
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">Tümü ({allCourses.length})</TabsTrigger>
-            <TabsTrigger value="in-progress">Devam Eden ({inProgressCourses.length})</TabsTrigger>
-            <TabsTrigger value="completed">Tamamlanan ({completedCourses.length})</TabsTrigger>
+            <TabsTrigger value="all">
+              Tüm Kurslar ({allCourses.length})
+            </TabsTrigger>
+            <TabsTrigger value="in-progress">
+              Devam Eden ({inProgressCourses.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              Tamamlanan ({completedCourses.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
@@ -278,7 +156,7 @@ function CourseGrid({ courses }: { courses: Enrollment[] }) {
   if (courses.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Bu kategoride kurs bulunamadı.</p>
+        <p className="text-muted-foreground">Bu kategoride kurs bulunmuyor.</p>
       </div>
     );
   }
@@ -286,86 +164,135 @@ function CourseGrid({ courses }: { courses: Enrollment[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {courses.map((enrollment) => (
-        <Card key={enrollment.id} className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
-          <div className="relative aspect-video overflow-hidden">
-            <Image
-              src={enrollment.course.thumbnail}
-              alt={enrollment.course.title}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            
-            {/* Progress Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span>{getProgressText(enrollment.progress)}</span>
-                <span>{enrollment.progress}%</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-1">
-                <div
-                  className={`h-1 rounded-full transition-all duration-300 ${getProgressColor(enrollment.progress)}`}
-                  style={{ width: `${enrollment.progress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Completed Badge */}
-            {enrollment.progress === 100 && (
-              <div className="absolute top-3 right-3">
-                <Badge className="bg-green-500 text-white">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Tamamlandı
-                </Badge>
-              </div>
-            )}
-          </div>
-
-          <CardContent className="p-4">
-            <h3 className="font-semibold text-lg leading-tight mb-2 line-clamp-2">
-              {enrollment.course.title}
-            </h3>
-            
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-              {enrollment.course.summary}
-            </p>
-
-            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                <span>Kayıt: {formatDate(enrollment.enrolledAt)}</span>
-              </div>
-            </div>
-
-            <Button className="w-full" asChild>
-              <Link href={`/player/${enrollment.courseId}/${enrollment.lastLessonId || '1'}`}>
-                {enrollment.progress === 100 ? 'Tekrar İzle' : 'Devam Et'}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <CourseCard key={enrollment.id} enrollment={enrollment} />
       ))}
     </div>
   );
 }
 
-function getProgressText(progress: number) {
-  if (progress === 100) return 'Tamamlandı';
-  if (progress >= 50) return 'Devam ediyor';
-  if (progress >= 25) return 'Başlandı';
-  return 'Yeni başlandı';
-}
+function CourseCard({ enrollment }: { enrollment: Enrollment }) {
+  const { course, progress, enrolledAt, lastLessonId } = enrollment;
+  
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
-function getProgressColor(progress: number) {
-  if (progress === 100) return 'bg-green-500';
-  if (progress >= 50) return 'bg-blue-500';
-  if (progress >= 25) return 'bg-yellow-500';
-  return 'bg-gray-500';
-}
+  const getProgressColor = (progress: number) => {
+    if (progress === 100) return 'bg-green-500';
+    if (progress >= 50) return 'bg-blue-500';
+    if (progress >= 25) return 'bg-yellow-500';
+    return 'bg-gray-500';
+  };
 
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('tr-TR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const getProgressText = (progress: number) => {
+    if (progress === 100) return 'Tamamlandı';
+    if (progress >= 50) return 'Devam ediyor';
+    if (progress >= 25) return 'Başlandı';
+    return 'Yeni başlandı';
+  };
+
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="aspect-video relative overflow-hidden">
+        <Image
+          src={course.thumbnail}
+          alt={course.title}
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+          <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border-white/50">
+            <Play className="h-5 w-5 mr-2" />
+            {progress > 0 ? 'Devam Et' : 'Başla'}
+          </Button>
+        </div>
+      </div>
+      
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg line-clamp-2 mb-2">
+              {course.title}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {course.summary}
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="space-y-4">
+          {/* Progress Bar */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">{getProgressText(progress)}</span>
+              <span className="text-sm text-muted-foreground">{progress}%</span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(progress)}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Course Info */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span>{Math.floor(course.duration / 60)}s</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <BookOpen className="h-4 w-4" />
+                <span>{course.totalLessons} ders</span>
+              </div>
+            </div>
+            <Badge variant="secondary" className="text-xs">
+              {course.level === 'beginner' && 'Başlangıç'}
+              {course.level === 'intermediate' && 'Orta'}
+              {course.level === 'advanced' && 'İleri'}
+            </Badge>
+          </div>
+
+          {/* Instructor & Date */}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <div className="relative w-6 h-6 rounded-full overflow-hidden">
+                <Image
+                  src={course.instructor.avatar}
+                  alt={course.instructor.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span className="text-muted-foreground">{course.instructor.name}</span>
+            </div>
+            <span className="text-muted-foreground">
+              {formatDate(enrolledAt)}
+            </span>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button asChild className="flex-1">
+              <Link href={lastLessonId ? `/player/${course.id}/${lastLessonId}` : `/courses/${course.slug}`}>
+                {progress > 0 ? 'Devam Et' : 'Başla'}
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/courses/${course.slug}`}>
+                Detay
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

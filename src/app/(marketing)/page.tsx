@@ -13,117 +13,9 @@ import { Logo } from '@/components/Logo';
 import { apiFetch } from '@/lib/fetcher';
 import type { CourseListItem } from '@/types/api';
 
-// Mock data removed - using API instead
-
-// Mock featured courses as fallback
-const mockFeaturedCourses: CourseListItem[] = [
-  {
-    id: '1',
-    slug: 'kucuk-hayvan-cerrahisi',
-    title: 'Küçük Hayvan Cerrahisi - Temel İlkeler',
-    summary: 'Küçük hayvan cerrahisinin temel prensipleri ve pratik uygulamaları. Sterilizasyon, anestezi ve cerrahi teknikler.',
-    price: 299,
-    thumbnail: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=400&h=225&fit=crop',
-    level: 'intermediate',
-    language: 'Türkçe',
-    rating: 4.8,
-    totalLessons: 45,
-    duration: 1200,
-    instructor: {
-      name: 'Prof. Dr. Mehmet Yılmaz',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
-    },
-  },
-  {
-    id: '2',
-    slug: 'buyuk-hayvan-hastaliklari',
-    title: 'Büyük Hayvan Hastalıkları ve Tedavisi',
-    summary: 'Sığır, at ve koyun hastalıklarının tanı ve tedavi yöntemleri. Klinik muayene teknikleri.',
-    price: 399,
-    thumbnail: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400&h=225&fit=crop',
-    level: 'advanced',
-    language: 'Türkçe',
-    rating: 4.9,
-    totalLessons: 60,
-    duration: 1800,
-    instructor: {
-      name: 'Prof. Dr. Ayşe Demir',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face',
-    },
-  },
-  {
-    id: '3',
-    slug: 'veteriner-radyoloji',
-    title: 'Veteriner Radyoloji - Görüntüleme Teknikleri',
-    summary: 'X-ray, ultrasonografi ve ileri görüntüleme yöntemleri. Radyolojik bulgular ve yorumlama.',
-    price: 449,
-    thumbnail: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=225&fit=crop',
-    level: 'intermediate',
-    language: 'Türkçe',
-    rating: 4.7,
-    totalLessons: 35,
-    duration: 900,
-    instructor: {
-      name: 'Doç. Dr. Can Özkan',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
-    },
-  },
-  {
-    id: '4',
-    slug: 'veteriner-anestezi',
-    title: 'Veteriner Anestezi ve Yoğun Bakım',
-    summary: 'Anestezi protokolleri, monitörizasyon ve yoğun bakım prensipleri. Güvenli anestezi uygulamaları.',
-    price: 349,
-    thumbnail: 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=400&h=225&fit=crop',
-    level: 'advanced',
-    language: 'Türkçe',
-    rating: 4.8,
-    totalLessons: 50,
-    duration: 1500,
-    instructor: {
-      name: 'Dr. Elif Kaya',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop&crop=face',
-    },
-  },
-  {
-    id: '5',
-    slug: 'veteriner-patoloji',
-    title: 'Veteriner Patoloji - Hastalık Mekanizmaları',
-    summary: 'Patolojik değişiklikler ve hastalık süreçleri. Histopatoloji ve nekropsi teknikleri.',
-    price: 0,
-    thumbnail: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=225&fit=crop',
-    level: 'intermediate',
-    language: 'Türkçe',
-    rating: 4.9,
-    totalLessons: 40,
-    duration: 1200,
-    instructor: {
-      name: 'Prof. Dr. Zeynep Arslan',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=32&h=32&fit=crop&crop=face',
-    },
-  },
-  {
-    id: '6',
-    slug: 'veteriner-farmakoloji',
-    title: 'Veteriner Farmakoloji - İlaç Tedavisi',
-    summary: 'Veteriner ilaçları, dozaj hesaplamaları ve tedavi protokolleri. Klinik farmakoloji uygulamaları.',
-    price: 299,
-    thumbnail: 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=400&h=225&fit=crop',
-    level: 'beginner',
-    language: 'Türkçe',
-    rating: 4.6,
-    totalLessons: 30,
-    duration: 800,
-    instructor: {
-      name: 'Doç. Dr. Oğuzhan Yıldız',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=32&h=32&fit=crop&crop=face',
-    },
-  },
-];
-
 // Client-side data fetching hook
 function useFeaturedCourses() {
-  const [courses, setCourses] = useState<CourseListItem[]>(mockFeaturedCourses);
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -133,8 +25,7 @@ function useFeaturedCourses() {
         setCourses(response.items);
       } catch (error) {
         console.error('Error fetching featured courses:', error);
-        // API başarısız olursa mock data kullan
-        setCourses(mockFeaturedCourses);
+        setCourses([]);
       } finally {
         setLoading(false);
       }
@@ -197,22 +88,22 @@ export default function HomePage() {
       {/* Stats Section */}
       <section className="py-16 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">2,500+</div>
-              <div className="text-gray-600 dark:text-gray-300">Veteriner Hekim</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">50+</div>
+              <div className="text-gray-600 dark:text-gray-300">Uzman Eğitmen</div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">150+</div>
-              <div className="text-gray-600 dark:text-gray-300">Uzmanlık Kursu</div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">200+</div>
+              <div className="text-gray-600 dark:text-gray-300">Kaliteli Kurs</div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">25+</div>
-              <div className="text-gray-600 dark:text-gray-300">Profesör Doktor</div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">10K+</div>
+              <div className="text-gray-600 dark:text-gray-300">Aktif Öğrenci</div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-orange-600 mb-2">4.9</div>
-              <div className="text-gray-600 dark:text-gray-300">Ortalama Puan</div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-orange-600 mb-2">95%</div>
+              <div className="text-gray-600 dark:text-gray-300">Memnuniyet</div>
             </div>
           </div>
         </div>
@@ -260,9 +151,9 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-4">
                   <GraduationCap className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Mesleki Gelişim</h3>
+                <h3 className="text-xl font-semibold mb-2">Sertifikalı Eğitim</h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Sürekli mesleki gelişim için geçerli sertifikalar ve uzmanlık belgeleri
+                  Tamamladığınız kurslar için geçerli sertifikalar kazanın
                 </p>
               </CardContent>
             </Card>
@@ -271,23 +162,36 @@ export default function HomePage() {
       </section>
 
       {/* Featured Courses Section */}
-      <section className="py-20">
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Öne Çıkan Veteriner Kursları
+              Öne Çıkan Kurslar
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              En popüler ve yüksek puanlı veteriner hekimlik kurslarımızı keşfedin
+              En popüler ve kaliteli kurslarımızla veteriner hekimlik kariyerinizi geliştirin
             </p>
           </div>
 
-          <CourseGrid courses={featuredCourses} />
+          {loading ? (
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-300">Kurslar yükleniyor...</p>
+            </div>
+          ) : featuredCourses.length > 0 ? (
+            <CourseGrid courses={featuredCourses} />
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-gray-300">
+                Öne çıkan kurslar yüklenirken bir sorun oluştu.
+              </p>
+            </div>
+          )}
 
           <div className="text-center mt-12">
-            <Button size="lg" variant="outline" asChild>
+            <Button size="lg" asChild>
               <Link href="/courses">
-                Tüm Kursları Gör
+                Tüm Kursları Görüntüle
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -299,10 +203,10 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-to-r from-green-600 to-blue-600">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Veteriner Hekimlik Kariyerinizi Geliştirin
+            Veteriner Kariyerinizi Geliştirmeye Hazır mısınız?
           </h2>
           <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-            Uzman veteriner hekimlerden eğitim alın ve mesleki gelişiminizi sürdürün
+            Uzman eğitmenlerimizle birlikte veteriner hekimlik alanında uzmanlaşın ve kariyerinizi bir üst seviyeye taşıyın.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" asChild>
@@ -310,10 +214,9 @@ export default function HomePage() {
                 Ücretsiz Hesap Oluştur
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-green-600" asChild>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-green-600" asChild>
               <Link href="/courses">
-                <Play className="mr-2 h-4 w-4" />
-                Veteriner Kurslarını İncele
+                Kursları İncele
               </Link>
             </Button>
           </div>

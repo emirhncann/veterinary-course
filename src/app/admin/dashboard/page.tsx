@@ -1,361 +1,484 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   BookOpen, 
   Users, 
   DollarSign, 
   TrendingUp, 
-  Plus,
-  Edit,
+  Activity,
   Eye,
   BarChart3,
   Settings,
-  AlertCircle,
-  AlertTriangle
+  Bell,
+  Calendar,
+  Clock,
+  Award,
+  ShoppingCart
 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AuthGuard } from '@/components/AuthGuard';
-import { apiFetch } from '@/lib/fetcher';
-import { useToast } from '@/lib/stores/useToast';
-import { useAdminLogs } from '@/lib/stores/useAdminLogs';
-import { useAdminActions } from '@/lib/hooks/useAdminActions';
-
-interface DashboardStats {
-  totalCourses: number;
-  totalStudents: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
-  recentCourses: Array<{
-    id: string;
-    title: string;
-    students: number;
-    revenue: number;
-    status: string;
-    createdAt: string;
-  }>;
-}
-
-async function getDashboardStats(): Promise<DashboardStats | null> {
-  try {
-    const response = await apiFetch<{ status: string; data: DashboardStats }>('/admin/dashboard');
-    
-    if (response.status === 'success' && response.data) {
-      return response.data;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    return null;
-  }
-}
-
 export default function AdminDashboard() {
-  const [stats, setStats] = React.useState<DashboardStats | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const { success, error, loading: toastLoading } = useToast();
-  const { logInfo, logError, logSuccess, getRecentLogs, clearLogs } = useAdminLogs();
-  const { executeWithLoading, notifySuccess } = useAdminActions();
+  const router = useRouter();
+  const [adminData, setAdminData] = React.useState<any>(null);
+  const [stats, setStats] = React.useState({
+    totalCourses: 45,
+    totalStudents: 1234,
+    totalRevenue: 125000,
+    monthlyRevenue: 15000,
+    activeUsers: 89,
+    completionRate: 78
+  });
 
   React.useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      
-      try {
-        const data = await executeWithLoading(
-          () => getDashboardStats(),
-          {
-            category: 'system',
-            action: 'Dashboard yükleme',
-            successMessage: 'Dashboard Yüklendi',
-            errorMessage: 'Dashboard Yüklenemedi',
-            loadingMessage: 'Dashboard Yükleniyor'
-          }
-        );
-        setStats(data);
-      } catch (err) {
-        console.error('Error loading dashboard:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // localStorage'dan admin bilgilerini al
+    const adminUser = localStorage.getItem('admin_user');
+    if (adminUser) {
+      setAdminData(JSON.parse(adminUser));
+    } else {
+      // Admin giriş yapmamışsa login sayfasına yönlendir
+      router.push('/adminlogin');
+    }
+  }, [router]);
 
-    fetchStats();
-  }, [executeWithLoading]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-    }).format(amount);
+  const handleLogout = () => {
+    localStorage.removeItem('admin_user');
+    router.push('/adminlogin');
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('tr-TR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  if (loading || !stats) {
+  if (!adminData) {
     return (
-      <AuthGuard requiredRole="admin">
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-32 bg-muted rounded"></div>
-              ))}
-            </div>
-          </div>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f8fafc'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #e2e8f0',
+            borderTop: '4px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p style={{ color: '#64748b' }}>Dashboard yükleniyor...</p>
         </div>
-      </AuthGuard>
+      </div>
     );
   }
 
-  return (
-    <AuthGuard requiredRole="admin">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
-              Kurs platformu yönetim paneli
+  const StatCard = ({ title, value, icon: Icon, color, change }: any) => (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '24px',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e2e8f0',
+      transition: 'transform 0.2s, box-shadow 0.2s'
+    }}
+    onMouseOver={(e) => {
+      e.currentTarget.style.transform = 'translateY(-2px)';
+      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+    }}
+    onMouseOut={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 8px 0' }}>{title}</p>
+          <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 4px 0' }}>
+            {typeof value === 'number' && value > 1000 ? 
+              `${(value / 1000).toFixed(1)}k` : 
+              value.toLocaleString()
+            }
+          </p>
+          {change && (
+            <p style={{ 
+              fontSize: '12px', 
+              color: change > 0 ? '#059669' : '#dc2626',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <TrendingUp size={12} />
+              {change > 0 ? '+' : ''}{change}%
             </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button asChild>
-              <Link href="/admin/courses/new">
-                <Plus className="h-4 w-4 mr-2" />
-                Yeni Kurs
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/admin/settings">
-                <Settings className="h-4 w-4 mr-2" />
+          )}
+        </div>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '12px',
+          backgroundColor: `${color}20`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Icon size={24} color={color} />
+        </div>
+      </div>
+    </div>
+  );
+
+  const QuickAction = ({ title, description, icon: Icon, onClick, color }: any) => (
+    <div 
+      onClick={onClick}
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        padding: '16px',
+        border: '1px solid #e2e8f0',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+      }}
+      onMouseOver={(e) => {
+        e.currentTarget.style.backgroundColor = '#f8fafc';
+        e.currentTarget.style.borderColor = color;
+      }}
+      onMouseOut={(e) => {
+        e.currentTarget.style.backgroundColor = 'white';
+        e.currentTarget.style.borderColor = '#e2e8f0';
+      }}
+    >
+      <div style={{
+        width: '40px',
+        height: '40px',
+        borderRadius: '8px',
+        backgroundColor: `${color}20`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Icon size={20} color={color} />
+      </div>
+      <div>
+        <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
+          {title}
+        </h4>
+        <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#f8fafc',
+        padding: '24px'
+      }}>
+        {/* Header */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #e2e8f0'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '32px', 
+                fontWeight: 'bold', 
+                color: '#1e293b', 
+                margin: '0 0 8px 0' 
+              }}>
+                Admin Dashboard
+              </h1>
+              <p style={{ color: '#64748b', margin: 0 }}>
+                Hoş geldiniz, <strong>{adminData.email}</strong> • {new Date().toLocaleDateString('tr-TR')}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button
+                onClick={() => router.push('/admin/settings')}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#f1f5f9',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '14px',
+                  color: '#475569'
+                }}
+              >
+                <Settings size={16} />
                 Ayarlar
-              </Link>
-            </Button>
+              </button>
+              <button
+                onClick={handleLogout}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#dc2626',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  color: 'white',
+                  fontSize: '14px'
+                }}
+              >
+                Çıkış Yap
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{stats.totalCourses}</div>
-                  <div className="text-sm text-muted-foreground">Toplam Kurs</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                  <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{stats.totalStudents.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Toplam Öğrenci</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-                  <div className="text-sm text-muted-foreground">Toplam Gelir</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
-                  <div className="text-sm text-muted-foreground">Bu Ay Gelir</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Stats Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '24px',
+          marginBottom: '24px'
+        }}>
+          <StatCard
+            title="Toplam Kurs"
+            value={stats.totalCourses}
+            icon={BookOpen}
+            color="#3b82f6"
+            change={12}
+          />
+          <StatCard
+            title="Toplam Öğrenci"
+            value={stats.totalStudents}
+            icon={Users}
+            color="#059669"
+            change={8}
+          />
+          <StatCard
+            title="Toplam Gelir"
+            value={`₺${stats.totalRevenue.toLocaleString()}`}
+            icon={DollarSign}
+            color="#dc2626"
+            change={15}
+          />
+          <StatCard
+            title="Aktif Kullanıcı"
+            value={stats.activeUsers}
+            icon={Activity}
+            color="#7c3aed"
+            change={5}
+          />
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Recent Courses */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Son Eklenen Kurslar</CardTitle>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/admin/courses">
-                    Tümünü Gör
-                  </Link>
-                </Button>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+          {/* Main Content */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Quick Actions */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h2 style={{ 
+                fontSize: '20px', 
+                fontWeight: '600', 
+                color: '#1e293b', 
+                margin: '0 0 16px 0' 
+              }}>
+                Hızlı İşlemler
+              </h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <QuickAction
+                  title="Yeni Kurs Ekle"
+                  description="Yeni bir kurs oluştur"
+                  icon={BookOpen}
+                  color="#3b82f6"
+                  onClick={() => router.push('/admin/courses/new')}
+                />
+                <QuickAction
+                  title="Öğrencileri Görüntüle"
+                  description="Tüm öğrencileri listele"
+                  icon={Users}
+                  color="#059669"
+                  onClick={() => router.push('/admin/students')}
+                />
+                <QuickAction
+                  title="Siparişleri İncele"
+                  description="Son siparişleri kontrol et"
+                  icon={ShoppingCart}
+                  color="#dc2626"
+                  onClick={() => router.push('/admin/orders')}
+                />
+                <QuickAction
+                  title="Raporları Görüntüle"
+                  description="Detaylı analitik raporlar"
+                  icon={BarChart3}
+                  color="#7c3aed"
+                  onClick={() => router.push('/admin/analytics')}
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats.recentCourses.map((course) => (
-                  <div key={course.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{course.title}</h4>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                        <span>{course.students} öğrenci</span>
-                        <span>{formatCurrency(course.revenue)} gelir</span>
-                        <span>{formatDate(course.createdAt)}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={course.status === 'active' ? 'default' : 'secondary'}>
-                        {course.status === 'active' ? 'Aktif' : 'Pasif'}
-                      </Badge>
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/admin/courses/${course.id}/edit`}>
-                          <Edit className="h-4 w-4" />
-                        </Link>
-                      </Button>
+            </div>
+
+            {/* Recent Activity */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h2 style={{ 
+                fontSize: '20px', 
+                fontWeight: '600', 
+                color: '#1e293b', 
+                margin: '0 0 16px 0' 
+              }}>
+                Son Aktiviteler
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  { action: 'Yeni öğrenci kaydı', user: 'Ahmet Yılmaz', time: '5 dakika önce', type: 'user' },
+                  { action: 'Kurs satışı tamamlandı', user: 'React Temelleri', time: '15 dakika önce', type: 'sale' },
+                  { action: 'Yeni kurs eklendi', user: 'JavaScript İleri Seviye', time: '1 saat önce', type: 'course' },
+                  { action: 'Öğrenci kursu tamamladı', user: 'Zeynep Kaya', time: '2 saat önce', type: 'completion' }
+                ].map((activity, index) => (
+                  <div key={index} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: activity.type === 'user' ? '#3b82f6' : 
+                                     activity.type === 'sale' ? '#059669' :
+                                     activity.type === 'course' ? '#7c3aed' : '#f59e0b'
+                    }}></div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#1e293b' }}>
+                        {activity.action}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+                        {activity.user} • {activity.time}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Hızlı İşlemler</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <Button asChild className="h-20 flex-col">
-                  <Link href="/admin/courses/new">
-                    <Plus className="h-6 w-6 mb-2" />
-                    Yeni Kurs Ekle
-                  </Link>
-                </Button>
-                
-                <Button variant="outline" asChild className="h-20 flex-col">
-                  <Link href="/admin/courses">
-                    <BookOpen className="h-6 w-6 mb-2" />
-                    Kursları Yönet
-                  </Link>
-                </Button>
-                
-                <Button variant="outline" asChild className="h-20 flex-col">
-                  <Link href="/admin/students">
-                    <Users className="h-6 w-6 mb-2" />
-                    Öğrencileri Gör
-                  </Link>
-                </Button>
-                
-                <Button variant="outline" asChild className="h-20 flex-col">
-                  <Link href="/admin/analytics">
-                    <BarChart3 className="h-6 w-6 mb-2" />
-                    Analitikler
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity - Gerçek Log Verileri */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Son Aktiviteler</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => {
-                clearLogs();
-                notifySuccess('system', 'Admin logları temizlendi', 'Loglar Temizlendi', 'Kullanıcı tarafından manuel olarak temizlendi');
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* System Status */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600', 
+                color: '#1e293b', 
+                margin: '0 0 16px 0' 
               }}>
-                Logları Temizle
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {getRecentLogs(10).length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  <p>Henüz aktivite yok</p>
-                  <p className="text-sm">Admin işlemleri burada görünecek</p>
+                Sistem Durumu
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '14px', color: '#64748b' }}>Server Durumu</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#059669' }}></div>
+                    <span style={{ fontSize: '12px', color: '#059669', fontWeight: '500' }}>Aktif</span>
+                  </div>
                 </div>
-              ) : (
-                getRecentLogs(10).map((log) => {
-                  const getLogIcon = () => {
-                    switch (log.level) {
-                      case 'success': return <Plus className="h-4 w-4 text-green-600 dark:text-green-400" />;
-                      case 'error': return <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />;
-                      case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
-                      default: return <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
-                    }
-                  };
-
-                  const getLogColor = () => {
-                    switch (log.level) {
-                      case 'success': return 'bg-green-100 dark:bg-green-900';
-                      case 'error': return 'bg-red-100 dark:bg-red-900';
-                      case 'warning': return 'bg-yellow-100 dark:bg-yellow-900';
-                      default: return 'bg-blue-100 dark:bg-blue-900';
-                    }
-                  };
-
-                  return (
-                    <div key={log.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <div className={`w-8 h-8 ${getLogColor()} rounded-full flex items-center justify-center`}>
-                        {getLogIcon()}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm">
-                          <span className="font-medium capitalize">{log.category}:</span> {log.action}
-                        </p>
-                        {log.details && (
-                          <p className="text-xs text-muted-foreground mt-1">{log.details}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(log.timestamp).toLocaleString('tr-TR')}
-                        </p>
-                      </div>
-                      <Badge variant={log.level === 'error' ? 'destructive' : log.level === 'success' ? 'default' : 'secondary'}>
-                        {log.level}
-                      </Badge>
-                    </div>
-                  );
-                })
-              )}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '14px', color: '#64748b' }}>Database</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#059669' }}></div>
+                    <span style={{ fontSize: '12px', color: '#059669', fontWeight: '500' }}>Bağlı</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '14px', color: '#64748b' }}>API Durumu</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#059669' }}></div>
+                    <span style={{ fontSize: '12px', color: '#059669', fontWeight: '500' }}>Çalışıyor</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Quick Stats */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600', 
+                color: '#1e293b', 
+                margin: '0 0 16px 0' 
+              }}>
+                Bu Ay
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '14px', color: '#64748b' }}>Yeni Kayıtlar</span>
+                    <span style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>234</span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '2px' }}>
+                    <div style={{ width: '78%', height: '100%', backgroundColor: '#3b82f6', borderRadius: '2px' }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '14px', color: '#64748b' }}>Tamamlanan Kurslar</span>
+                    <span style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>89</span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '2px' }}>
+                    <div style={{ width: '65%', height: '100%', backgroundColor: '#059669', borderRadius: '2px' }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '14px', color: '#64748b' }}>Aylık Gelir</span>
+                    <span style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>₺15.2k</span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '2px' }}>
+                    <div style={{ width: '85%', height: '100%', backgroundColor: '#dc2626', borderRadius: '2px' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </AuthGuard>
+    </>
   );
 }

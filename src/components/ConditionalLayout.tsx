@@ -11,8 +11,8 @@ interface ConditionalLayoutProps {
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
   
-  // Admin login sayfaları için navbar ve footer gösterme
-  const isAdminLogin = pathname === '/admin/login' || pathname === '/admin-login' || pathname === '/adminlogin';
+  // Admin login sayfası için navbar ve footer gösterme
+  const isAdminLogin = pathname === '/adminlogin';
   
   if (isAdminLogin) {
     return <>{children}</>;

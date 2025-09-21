@@ -8,8 +8,8 @@ export default function AdminLoginPage() {
   
   const router = useRouter();
   const [formData, setFormData] = React.useState({
-    email: 'admin@example.com',
-    password: 'admin123',
+    email: '',
+    password: '',
   });
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -27,21 +27,49 @@ export default function AdminLoginPage() {
     console.log('✅ Form submitted:', formData);
     
     try {
-      // Simulated API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Test için basit validation
-      if (formData.email === 'admin@example.com' && formData.password === 'admin123') {
-        console.log('✅ Login successful!');
+      // PHP API'ye POST request (api.vetmedipedia.com)
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://api.vetmedipedia.com/admin/login'
+        : 'https://api.vetmedipedia.com/admin/login'; // Test için aynı URL
         
-        // Başarılı giriş - admin dashboard'a yönlendir
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include', // CORS için
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('🔍 API Response:', data);
+
+      // API response format: { status, message, valid, admin? }
+      if (data.status === 'success' && data.valid === true && data.admin) {
+        console.log('✅ Login successful!', data.admin);
+        
+        // Admin bilgilerini localStorage'a kaydet (isteğe bağlı)
+        localStorage.setItem('admin_user', JSON.stringify(data.admin));
+        
+        // Admin dashboard'a yönlendir
         router.push('/admin/dashboard');
       } else {
-        throw new Error('Hatalı e-posta veya şifre!');
+        // Hata mesajını göster
+        throw new Error(data.message || 'Giriş başarısız');
       }
     } catch (err) {
       console.error('❌ Login error:', err);
-      setError(err instanceof Error ? err.message : 'Giriş yapılırken bir hata oluştu');
+      
+      // Network hatası vs API hatası ayırımı
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        setError('Sunucu ile bağlantı kurulamadı. Lütfen tekrar deneyin.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Giriş yapılırken bir hata oluştu');
+      }
     } finally {
       setLoading(false);
     }
@@ -249,19 +277,19 @@ export default function AdminLoginPage() {
           border: '1px solid #0ea5e9'
         }}>
           <p style={{ fontSize: '0.875rem', color: '#0369a1', fontWeight: '500', margin: '0 0 0.5rem 0' }}>
-            📋 Demo Bilgiler:
+            🔗 API Entegrasyonu Aktif
           </p>
           <p style={{ fontSize: '0.75rem', color: '#0369a1', margin: '0.25rem 0' }}>
-            Email: admin@example.com
+            Endpoint: POST https://api.vetmedipedia.com/admin/login
           </p>
           <p style={{ fontSize: '0.75rem', color: '#0369a1', margin: '0.25rem 0' }}>
-            Şifre: admin123
+            Database'den gerçek admin hesabı ile giriş yapın
           </p>
         </div>
         
         <div style={{ marginTop: '1rem', textAlign: 'center' }}>
           <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-            Test Route: /adminlogin (tek kelime)
+            URL: /adminlogin | PHP API Ready
           </p>
         </div>
       </div>

@@ -35,7 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AuthGuard } from '@/components/AuthGuard';
 import { apiFetch } from '@/lib/fetcher';
 
 interface Order {
@@ -202,7 +201,6 @@ export default function AdminOrdersPage() {
 
   if (loading) {
     return (
-      <AuthGuard requiredRole="admin">
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
@@ -213,7 +211,6 @@ export default function AdminOrdersPage() {
             </div>
           </div>
         </div>
-      </AuthGuard>
     );
   }
 
@@ -477,6 +474,5 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </div>
-    </AuthGuard>
   );
 }

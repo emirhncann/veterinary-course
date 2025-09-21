@@ -81,6 +81,8 @@ export interface CourseListItem {
   summary: string;
   price: number;
   thumbnail: string;
+  cover_image_base64?: string;
+  cover_image_mime_type?: string;
   level: 'beginner' | 'intermediate' | 'advanced';
   language: string;
   rating: number;

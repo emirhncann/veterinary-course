@@ -17,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AuthGuard } from '@/components/AuthGuard';
 import { useAdminLogs, type LogLevel, type LogCategory } from '@/lib/stores/useAdminLogs';
 import { useToast } from '@/lib/stores/useToast';
 
@@ -114,7 +113,6 @@ export default function AdminLogsPage() {
   }, [logs]);
 
   return (
-    <AuthGuard requiredRole="admin">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -305,6 +303,5 @@ export default function AdminLogsPage() {
           </CardContent>
         </Card>
       </div>
-    </AuthGuard>
   );
 }

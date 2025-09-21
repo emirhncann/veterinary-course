@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AuthGuard } from '@/components/AuthGuard';
 import { apiFetch } from '@/lib/fetcher';
 import { useAdminActions } from '@/lib/hooks/useAdminActions';
 import type { CourseListItem } from '@/types/api';
@@ -52,15 +51,16 @@ async function getCourses(filters: {
   try {
     const searchParams = new URLSearchParams();
     if (filters.search) searchParams.append('search', filters.search);
-    if (filters.status) searchParams.append('status', filters.status);
+    if (filters.status) searchParams.append('is_published', filters.status === 'published' ? '1' : '0');
     if (filters.level) searchParams.append('level', filters.level);
     if (filters.page) searchParams.append('page', filters.page.toString());
     searchParams.append('limit', '10');
 
-    const response = await apiFetch<{ status: string; data: AdminCoursesResponse }>(`/admin/courses?${searchParams}`);
+    const response = await fetch(`https://api.vetmedipedia.com/courses?${searchParams}`);
+    const data = await response.json();
     
-    if (response.status === 'success' && response.data) {
-      return response.data;
+    if (data.status === 'success') {
+      return data;
     }
     
     return { items: [], total: 0, page: 1, limit: 10 };
@@ -72,10 +72,16 @@ async function getCourses(filters: {
 
 async function deleteCourse(courseId: string): Promise<boolean> {
   try {
-    await apiFetch(`/admin/courses/${courseId}`, {
+    const response = await fetch(`https://api.vetmedipedia.com/courses/${courseId}`, {
       method: 'DELETE',
     });
-    return true;
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+      return true;
+    }
+    
+    return false;
   } catch (error) {
     console.error('Error deleting course:', error);
     throw error; // Hata fırlatarak executeWithLoading'in handle etmesini sağlıyoruz
@@ -183,24 +189,21 @@ export default function AdminCoursesPage() {
 
   if (loading) {
     return (
-      <AuthGuard requiredRole="admin">
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="h-20 bg-muted rounded"></div>
-              ))}
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="h-20 bg-muted rounded"></div>
+            ))}
           </div>
         </div>
-      </AuthGuard>
+      </div>
     );
   }
 
   return (
-    <AuthGuard requiredRole="admin">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -238,7 +241,7 @@ export default function AdminCoursesPage() {
                   <SelectValue placeholder="Durum" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tümü</SelectItem>
+                  <SelectItem value="all">Tümü</SelectItem>
                   <SelectItem value="active">Aktif</SelectItem>
                   <SelectItem value="draft">Taslak</SelectItem>
                   <SelectItem value="inactive">Pasif</SelectItem>
@@ -250,7 +253,7 @@ export default function AdminCoursesPage() {
                   <SelectValue placeholder="Seviye" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tümü</SelectItem>
+                  <SelectItem value="all">Tümü</SelectItem>
                   <SelectItem value="beginner">Başlangıç</SelectItem>
                   <SelectItem value="intermediate">Orta</SelectItem>
                   <SelectItem value="advanced">İleri</SelectItem>
@@ -290,6 +293,7 @@ export default function AdminCoursesPage() {
                   <thead className="border-b bg-gray-50 dark:bg-gray-800">
                     <tr>
                       <th className="text-left p-4 font-medium">Kurs</th>
+                      <th className="text-left p-4 font-medium">Eğitmen</th>
                       <th className="text-left p-4 font-medium">Fiyat</th>
                       <th className="text-left p-4 font-medium">Seviye</th>
                       <th className="text-left p-4 font-medium">Öğrenci</th>
@@ -302,13 +306,17 @@ export default function AdminCoursesPage() {
                       <tr key={course.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="relative w-16 h-12 rounded overflow-hidden">
-                              <Image
-                                src={course.thumbnail}
-                                alt={course.title}
-                                fill
-                                className="object-cover"
-                              />
+                            <div className="relative w-16 h-12 rounded overflow-hidden bg-gray-200 flex items-center justify-center">
+                              {course.cover_image_base64 ? (
+                                <Image
+                                  src={`data:${course.cover_image_mime_type};base64,${course.cover_image_base64}`}
+                                  alt={course.title}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="text-gray-400 text-xs">No Image</div>
+                              )}
                             </div>
                             <div>
                               <h4 className="font-medium line-clamp-1">{course.title}</h4>
@@ -316,6 +324,16 @@ export default function AdminCoursesPage() {
                                 {course.summary}
                               </p>
                             </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+                              {course.instructor?.name?.charAt(0) || 'E'}
+                            </div>
+                            <span className="text-sm font-medium">
+                              {course.instructor?.name || 'Eğitmen'}
+                            </span>
                           </div>
                         </td>
                         <td className="p-4">
@@ -404,6 +422,5 @@ export default function AdminCoursesPage() {
           </div>
         )}
       </div>
-    </AuthGuard>
   );
 }

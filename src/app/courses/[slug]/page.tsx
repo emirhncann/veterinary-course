@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -17,7 +18,6 @@ import { ReviewList } from '@/components/ReviewList';
 import { apiFetch } from '@/lib/fetcher';
 import type { Course } from '@/types/api';
 
-// Static params kaldırıldı - client component olduğu için generateStaticParams kullanılamaz
 
 // Client-side course data fetching hook
 function useCourse() {
@@ -135,13 +135,10 @@ export default function CourseDetailPage() {
 
               {/* Instructor */}
               <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                  <Image
-                    src={course.instructor.avatar}
-                    alt={course.instructor.name}
-                    fill
-                    className="object-cover"
-                  />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-lg text-white font-medium">
+                    {course.instructor.name?.charAt(0) || 'E'}
+                  </span>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Eğitmen</p>
@@ -210,13 +207,10 @@ export default function CourseDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start gap-4">
-                      <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-                        <Image
-                          src={course.instructor.avatar}
-                          alt={course.instructor.name}
-                          fill
-                          className="object-cover"
-                        />
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xl text-white font-medium">
+                          {course.instructor.name?.charAt(0) || 'E'}
+                        </span>
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg mb-2">{course.instructor.name}</h3>

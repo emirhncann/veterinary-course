@@ -14,7 +14,6 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AuthGuard } from '@/components/AuthGuard';
 import { apiFetch } from '@/lib/fetcher';
 
 interface AnalyticsData {
@@ -102,7 +101,6 @@ export default function AdminAnalyticsPage() {
 
   if (loading) {
     return (
-      <AuthGuard requiredRole="admin">
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
@@ -117,13 +115,11 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
         </div>
-      </AuthGuard>
     );
   }
 
   if (!analytics) {
     return (
-      <AuthGuard requiredRole="admin">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -133,7 +129,6 @@ export default function AdminAnalyticsPage() {
             </p>
           </div>
         </div>
-      </AuthGuard>
     );
   }
 
@@ -303,6 +298,5 @@ export default function AdminAnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-    </AuthGuard>
   );
 }

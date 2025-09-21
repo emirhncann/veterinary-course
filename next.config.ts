@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Tamamen static export - client-side only
-  output: 'export',
+  // Client-side rendering
   trailingSlash: true,
   images: {
     unoptimized: true,

@@ -21,30 +21,108 @@ import {
 export default function AdminDashboard() {
   const router = useRouter();
   const [adminData, setAdminData] = React.useState<any>(null);
+  const [isClient, setIsClient] = React.useState(false);
   const [stats, setStats] = React.useState({
-    totalCourses: 45,
-    totalStudents: 1234,
-    totalRevenue: 125000,
-    monthlyRevenue: 15000,
-    activeUsers: 89,
-    completionRate: 78
+    totalCourses: 0,
+    totalInstructors: 0,
+    totalCategories: 0,
+    totalUsers: 0,
+    systemStatus: {
+      api: false,
+      database: false,
+      fileSystem: true
+    }
   });
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    setIsClient(true);
     // localStorage'dan admin bilgilerini al
     const adminUser = localStorage.getItem('admin_user');
     if (adminUser) {
       setAdminData(JSON.parse(adminUser));
+      loadDashboardData();
     } else {
       // Admin giriş yapmamışsa login sayfasına yönlendir
       router.push('/adminlogin');
     }
   }, [router]);
 
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Paralel olarak tüm verileri yükle
+      const [coursesRes, instructorsRes, categoriesRes] = await Promise.allSettled([
+        fetch('https://api.vetmedipedia.com/courses?limit=1'),
+        fetch('https://api.vetmedipedia.com/instructors'),
+        fetch('https://api.vetmedipedia.com/categories')
+      ]);
+
+      // Kurs sayısını al
+      if (coursesRes.status === 'fulfilled' && coursesRes.value.ok) {
+        const coursesData = await coursesRes.value.json();
+        setStats(prev => ({ ...prev, totalCourses: coursesData.total || 0 }));
+      }
+
+      // Eğitmen sayısını al
+      if (instructorsRes.status === 'fulfilled' && instructorsRes.value.ok) {
+        const instructorsData = await instructorsRes.value.json();
+        setStats(prev => ({ ...prev, totalInstructors: instructorsData.items?.length || 0 }));
+      }
+
+      // Kategori sayısını al
+      if (categoriesRes.status === 'fulfilled' && categoriesRes.value.ok) {
+        const categoriesData = await categoriesRes.value.json();
+        setStats(prev => ({ ...prev, totalCategories: categoriesData.items?.length || 0 }));
+      }
+
+      // Sistem durumunu güncelle
+      setStats(prev => ({
+        ...prev,
+        systemStatus: {
+          api: coursesRes.status === 'fulfilled' && coursesRes.value.ok,
+          database: instructorsRes.status === 'fulfilled' && instructorsRes.value.ok,
+          fileSystem: true
+        }
+      }));
+
+    } catch (error) {
+      console.error('Dashboard verileri yüklenirken hata:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('admin_user');
     router.push('/adminlogin');
   };
+
+  if (!isClient) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f8fafc'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #e2e8f0',
+            borderTop: '4px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p style={{ color: '#64748b' }}>Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!adminData) {
     return (
@@ -254,31 +332,27 @@ export default function AdminDashboard() {
         }}>
           <StatCard
             title="Toplam Kurs"
-            value={stats.totalCourses}
+            value={loading ? '...' : stats.totalCourses}
             icon={BookOpen}
             color="#3b82f6"
-            change={12}
           />
           <StatCard
-            title="Toplam Öğrenci"
-            value={stats.totalStudents}
+            title="Eğitmenler"
+            value={loading ? '...' : stats.totalInstructors}
             icon={Users}
             color="#059669"
-            change={8}
           />
           <StatCard
-            title="Toplam Gelir"
-            value={`₺${stats.totalRevenue.toLocaleString()}`}
-            icon={DollarSign}
-            color="#dc2626"
-            change={15}
-          />
-          <StatCard
-            title="Aktif Kullanıcı"
-            value={stats.activeUsers}
-            icon={Activity}
+            title="Kategoriler"
+            value={loading ? '...' : stats.totalCategories}
+            icon={Award}
             color="#7c3aed"
-            change={5}
+          />
+          <StatCard
+            title="Sistem Durumu"
+            value={stats.systemStatus.api && stats.systemStatus.database ? 'Aktif' : 'Hata'}
+            icon={Activity}
+            color={stats.systemStatus.api && stats.systemStatus.database ? '#059669' : '#dc2626'}
           />
         </div>
 
@@ -310,25 +384,25 @@ export default function AdminDashboard() {
                   onClick={() => router.push('/admin/courses/new')}
                 />
                 <QuickAction
-                  title="Öğrencileri Görüntüle"
-                  description="Tüm öğrencileri listele"
-                  icon={Users}
+                  title="Kurs Yönetimi"
+                  description="Tüm kursları listele ve düzenle"
+                  icon={BookOpen}
                   color="#059669"
-                  onClick={() => router.push('/admin/students')}
+                  onClick={() => router.push('/admin/courses')}
                 />
                 <QuickAction
-                  title="Siparişleri İncele"
-                  description="Son siparişleri kontrol et"
-                  icon={ShoppingCart}
-                  color="#dc2626"
-                  onClick={() => router.push('/admin/orders')}
-                />
-                <QuickAction
-                  title="Raporları Görüntüle"
-                  description="Detaylı analitik raporlar"
-                  icon={BarChart3}
+                  title="Eğitmen Yönetimi"
+                  description="Eğitmenleri yönet"
+                  icon={Users}
                   color="#7c3aed"
-                  onClick={() => router.push('/admin/analytics')}
+                  onClick={() => router.push('/admin/instructors')}
+                />
+                <QuickAction
+                  title="Kategori Yönetimi"
+                  description="Kurs kategorilerini yönet"
+                  icon={Award}
+                  color="#f59e0b"
+                  onClick={() => router.push('/admin/categories')}
                 />
               </div>
             </div>
@@ -407,30 +481,63 @@ export default function AdminDashboard() {
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '14px', color: '#64748b' }}>Server Durumu</span>
+                  <span style={{ fontSize: '14px', color: '#64748b' }}>API Sunucusu</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#059669' }}></div>
-                    <span style={{ fontSize: '12px', color: '#059669', fontWeight: '500' }}>Aktif</span>
+                    <div style={{ 
+                      width: '8px', 
+                      height: '8px', 
+                      borderRadius: '50%', 
+                      backgroundColor: stats.systemStatus.api ? '#059669' : '#dc2626' 
+                    }}></div>
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: stats.systemStatus.api ? '#059669' : '#dc2626', 
+                      fontWeight: '500' 
+                    }}>
+                      {stats.systemStatus.api ? 'Çevrimiçi' : 'Çevrimdışı'}
+                    </span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '14px', color: '#64748b' }}>Database</span>
+                  <span style={{ fontSize: '14px', color: '#64748b' }}>Veritabanı</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#059669' }}></div>
-                    <span style={{ fontSize: '12px', color: '#059669', fontWeight: '500' }}>Bağlı</span>
+                    <div style={{ 
+                      width: '8px', 
+                      height: '8px', 
+                      borderRadius: '50%', 
+                      backgroundColor: stats.systemStatus.database ? '#059669' : '#dc2626' 
+                    }}></div>
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: stats.systemStatus.database ? '#059669' : '#dc2626', 
+                      fontWeight: '500' 
+                    }}>
+                      {stats.systemStatus.database ? 'Bağlı' : 'Bağlantı Hatası'}
+                    </span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '14px', color: '#64748b' }}>API Durumu</span>
+                  <span style={{ fontSize: '14px', color: '#64748b' }}>Dosya Sistemi</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#059669' }}></div>
-                    <span style={{ fontSize: '12px', color: '#059669', fontWeight: '500' }}>Çalışıyor</span>
+                    <div style={{ 
+                      width: '8px', 
+                      height: '8px', 
+                      borderRadius: '50%', 
+                      backgroundColor: stats.systemStatus.fileSystem ? '#059669' : '#dc2626' 
+                    }}></div>
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: stats.systemStatus.fileSystem ? '#059669' : '#dc2626', 
+                      fontWeight: '500' 
+                    }}>
+                      Aktif
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Stats */}
+            {/* API Endpoints Info */}
             <div style={{
               backgroundColor: 'white',
               borderRadius: '12px',
@@ -444,35 +551,33 @@ export default function AdminDashboard() {
                 color: '#1e293b', 
                 margin: '0 0 16px 0' 
               }}>
-                Bu Ay
+                API Endpoint'leri
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '14px', color: '#64748b' }}>Yeni Kayıtlar</span>
-                    <span style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>234</span>
-                  </div>
-                  <div style={{ width: '100%', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '2px' }}>
-                    <div style={{ width: '78%', height: '100%', backgroundColor: '#3b82f6', borderRadius: '2px' }}></div>
-                  </div>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: '0 0 8px 0' }}>
+                    Kurs Yönetimi
+                  </h4>
+                  <ul style={{ fontSize: '12px', color: '#64748b', margin: 0, paddingLeft: '16px' }}>
+                    <li>POST /courses - Kurs oluştur</li>
+                    <li>GET /courses - Kurs listesi</li>
+                    <li>GET /courses/{'{id}'} - Kurs detayı</li>
+                    <li>PUT /courses/{'{id}'} - Kurs güncelle</li>
+                    <li>DELETE /courses/{'{id}'} - Kurs sil</li>
+                  </ul>
                 </div>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '14px', color: '#64748b' }}>Tamamlanan Kurslar</span>
-                    <span style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>89</span>
-                  </div>
-                  <div style={{ width: '100%', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '2px' }}>
-                    <div style={{ width: '65%', height: '100%', backgroundColor: '#059669', borderRadius: '2px' }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '14px', color: '#64748b' }}>Aylık Gelir</span>
-                    <span style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>₺15.2k</span>
-                  </div>
-                  <div style={{ width: '100%', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '2px' }}>
-                    <div style={{ width: '85%', height: '100%', backgroundColor: '#dc2626', borderRadius: '2px' }}></div>
-                  </div>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: '0 0 8px 0' }}>
+                    Diğer Servisler
+                  </h4>
+                  <ul style={{ fontSize: '12px', color: '#64748b', margin: 0, paddingLeft: '16px' }}>
+                    <li>POST /instructors - Eğitmen ekle</li>
+                    <li>GET /instructors - Eğitmen listesi</li>
+                    <li>POST /categories - Kategori ekle</li>
+                    <li>GET /categories - Kategori listesi</li>
+                    <li>POST /register - Kullanıcı kayıt</li>
+                    <li>POST /login - Kullanıcı giriş</li>
+                  </ul>
                 </div>
               </div>
             </div>

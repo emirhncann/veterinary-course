@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+
 import { useParams, useRouter } from 'next/navigation';
 import { CheckCircle, CreditCard, Lock, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
@@ -15,7 +16,6 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { apiFetch } from '@/lib/fetcher';
 import type { Course, OrderRequest, OrderResponse } from '@/types/api';
 
-// Static params kaldırıldı - client component olduğu için generateStaticParams kullanılamaz
 
 async function getCourse(courseId: string): Promise<Course | null> {
   try {

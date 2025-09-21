@@ -13,16 +13,22 @@ export default function NewCoursePage() {
   
   const [formData, setFormData] = React.useState({
     title: '',
+    slug: '',
     summary: '',
     description: '',
-    instructor_id: '',
-    category_id: '',
+    cover_image_base64: '',
+    cover_image_mime_type: '',
     price: '',
     original_price: '',
     level: 'beginner',
     language: 'tr',
     duration: '',
     total_lessons: '',
+    rating: '',
+    total_ratings: '',
+    total_students: '',
+    instructor_id: '',
+    category_id: '',
     is_featured: false,
     is_published: true,
     is_free: false,
@@ -34,6 +40,7 @@ export default function NewCoursePage() {
   const [newTag, setNewTag] = React.useState('');
   const [newRequirement, setNewRequirement] = React.useState('');
   const [newLearning, setNewLearning] = React.useState('');
+  const [imagePreview, setImagePreview] = React.useState<string>('');
 
   React.useEffect(() => {
     // Kategorileri ve eğitmenleri yükle
@@ -71,25 +78,31 @@ export default function NewCoursePage() {
     setError('');
 
     try {
-      // Form verilerini API formatına çevir
+      // Form verilerini API formatına çevir (database şemasına uygun)
       const courseData = {
         title: formData.title,
-        summary: formData.summary,
-        description: formData.description,
-        instructor_id: parseInt(formData.instructor_id),
-        category_id: formData.category_id ? parseInt(formData.category_id) : null,
+        slug: formData.slug || null, // Boşsa API'de title'dan türetilecek
+        summary: formData.summary || null,
+        description: formData.description || null,
+        cover_image_base64: formData.cover_image_base64 || null,
+        cover_image_mime_type: formData.cover_image_mime_type || null,
         price: formData.price ? parseFloat(formData.price) : 0,
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
         level: formData.level,
         language: formData.language,
         duration: formData.duration ? parseInt(formData.duration) : null,
         total_lessons: formData.total_lessons ? parseInt(formData.total_lessons) : null,
+        rating: formData.rating ? parseFloat(formData.rating) : null,
+        total_ratings: formData.total_ratings ? parseInt(formData.total_ratings) : null,
+        total_students: formData.total_students ? parseInt(formData.total_students) : null,
+        instructor_id: parseInt(formData.instructor_id),
+        category_id: formData.category_id ? parseInt(formData.category_id) : null,
         is_featured: formData.is_featured,
         is_published: formData.is_published,
         is_free: formData.is_free,
-        tags: formData.tags,
-        requirements: formData.requirements,
-        what_you_will_learn: formData.what_you_will_learn
+        tags: formData.tags.length > 0 ? JSON.stringify(formData.tags) : null,
+        requirements: formData.requirements.length > 0 ? JSON.stringify(formData.requirements) : null,
+        what_you_will_learn: formData.what_you_will_learn.length > 0 ? JSON.stringify(formData.what_you_will_learn) : null
       };
 
       console.log('Kurs verisi gönderiliyor:', courseData);
@@ -126,6 +139,51 @@ export default function NewCoursePage() {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      alert('Lütfen sadece resim dosyası seçin!');
+      return;
+    }
+
+    // Dosya boyutu kontrolü (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Resim boyutu 5MB\'dan küçük olmalıdır!');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      
+      // Base64 string'ini temizle (data:image/... kısmını kaldır)
+      const base64String = result.split(',')[1];
+      
+      setFormData(prev => ({
+        ...prev,
+        cover_image_base64: base64String,
+        cover_image_mime_type: file.type
+      }));
+      
+      // Önizleme için tam data URL'yi sakla
+      setImagePreview(result);
+    };
+    
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      cover_image_base64: '',
+      cover_image_mime_type: ''
+    }));
+    setImagePreview('');
   };
 
   const addTag = () => {
@@ -181,10 +239,10 @@ export default function NewCoursePage() {
 
   return (
     <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-      {/* Header */}
+        {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
         <button
-          onClick={() => router.push('/admin/courses')}
+            onClick={() => router.push('/admin/courses')}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -199,11 +257,11 @@ export default function NewCoursePage() {
           }}
         >
           <ArrowLeft size={16} />
-          Geri Dön
+            Geri Dön
         </button>
         <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>
-          Yeni Kurs Oluştur
-        </h1>
+              Yeni Kurs Oluştur
+            </h1>
       </div>
 
       {/* Error Message */}
@@ -243,9 +301,9 @@ export default function NewCoursePage() {
               <input
                 type="text"
                 name="title"
-                value={formData.title}
+                    value={formData.title}
                 onChange={handleInputChange}
-                required
+                    required
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -255,8 +313,29 @@ export default function NewCoursePage() {
                   outline: 'none'
                 }}
                 placeholder="Kurs başlığını girin"
-              />
-            </div>
+                  />
+                </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                Slug (URL)
+              </label>
+              <input
+                type="text"
+                name="slug"
+                value={formData.slug}
+                onChange={handleInputChange}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  outline: 'none'
+                }}
+                placeholder="kurs-url-slug (boş bırakılırsa başlıktan türetilir)"
+                  />
+                </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
@@ -264,9 +343,9 @@ export default function NewCoursePage() {
               </label>
               <textarea
                 name="summary"
-                value={formData.summary}
+                  value={formData.summary}
                 onChange={handleInputChange}
-                rows={3}
+                  rows={3}
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -277,8 +356,8 @@ export default function NewCoursePage() {
                   resize: 'vertical'
                 }}
                 placeholder="Kurs özetini girin"
-              />
-            </div>
+                />
+              </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
@@ -286,7 +365,7 @@ export default function NewCoursePage() {
               </label>
               <textarea
                 name="description"
-                value={formData.description}
+                  value={formData.description}
                 onChange={handleInputChange}
                 rows={5}
                 style={{
@@ -299,10 +378,101 @@ export default function NewCoursePage() {
                   resize: 'vertical'
                 }}
                 placeholder="Detaylı kurs açıklamasını girin"
-              />
+                />
+              </div>
+
+            {/* Resim Yükleme */}
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                Kurs Kapak Resmi
+              </label>
+              
+              {!imagePreview ? (
+                <div style={{
+                  border: '2px dashed #d1d5db',
+                  borderRadius: '8px',
+                  padding: '24px',
+                  textAlign: 'center',
+                  backgroundColor: '#f9fafb',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.borderColor = '#3b82f6';
+                  e.currentTarget.style.backgroundColor = '#eff6ff';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                  e.currentTarget.style.backgroundColor = '#f9fafb';
+                }}
+                onClick={() => document.getElementById('image-upload')?.click()}>
+                  <div style={{ fontSize: '48px', color: '#9ca3af', marginBottom: '12px' }}>📷</div>
+                  <p style={{ fontSize: '16px', color: '#374151', margin: '0 0 8px 0' }}>
+                    Resim yüklemek için tıklayın
+                  </p>
+                  <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
+                    PNG, JPG, JPEG (Max 5MB)
+                  </p>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              ) : (
+                <div style={{ position: 'relative' }}>
+                  <img
+                    src={imagePreview}
+                    alt="Kurs kapak resmi"
+                    style={{
+                      width: '100%',
+                      maxHeight: '300px',
+                      objectFit: 'cover',
+                      borderRadius: '8px',
+                      border: '2px solid #e5e7eb'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      width: '32px',
+                      height: '32px',
+                      backgroundColor: '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px'
+                    }}
+                  >
+                    ×
+                  </button>
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '8px',
+                    left: '8px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    {formData.cover_image_mime_type}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
+                </div>
+              </div>
 
         {/* Kurs Detayları */}
         <div style={{
@@ -316,7 +486,7 @@ export default function NewCoursePage() {
             Kurs Detayları
           </h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
                 Eğitmen *
@@ -325,7 +495,7 @@ export default function NewCoursePage() {
                 name="instructor_id"
                 value={formData.instructor_id}
                 onChange={handleInputChange}
-                required
+                  required
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -390,8 +560,8 @@ export default function NewCoursePage() {
                   outline: 'none'
                 }}
                 placeholder="0.00"
-              />
-            </div>
+                />
+              </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
@@ -413,8 +583,8 @@ export default function NewCoursePage() {
                   outline: 'none'
                 }}
                 placeholder="0.00"
-              />
-            </div>
+                        />
+                      </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
@@ -437,7 +607,7 @@ export default function NewCoursePage() {
                 <option value="intermediate">Orta</option>
                 <option value="advanced">İleri</option>
               </select>
-            </div>
+                    </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
@@ -459,9 +629,121 @@ export default function NewCoursePage() {
                 <option value="tr">Türkçe</option>
                 <option value="en">English</option>
               </select>
+                          </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                Süre (dakika)
+              </label>
+              <input
+                                type="number"
+                name="duration"
+                value={formData.duration}
+                onChange={handleInputChange}
+                                min="0"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  outline: 'none'
+                }}
+                                placeholder="0"
+                              />
+                            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                Toplam Ders Sayısı
+              </label>
+              <input
+                type="number"
+                name="total_lessons"
+                value={formData.total_lessons}
+                onChange={handleInputChange}
+                min="0"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  outline: 'none'
+                }}
+                placeholder="0"
+                              />
+                            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                Puan (0-5)
+              </label>
+              <input
+                type="number"
+                name="rating"
+                value={formData.rating}
+                onChange={handleInputChange}
+                min="0"
+                max="5"
+                step="0.1"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  outline: 'none'
+                }}
+                placeholder="0.0"
+              />
+                          </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                Toplam Puan Sayısı
+              </label>
+              <input
+                type="number"
+                name="total_ratings"
+                value={formData.total_ratings}
+                onChange={handleInputChange}
+                min="0"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  outline: 'none'
+                }}
+                placeholder="0"
+                            />
+                          </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                Toplam Öğrenci Sayısı
+              </label>
+                            <input
+                type="number"
+                name="total_students"
+                value={formData.total_students}
+                onChange={handleInputChange}
+                min="0"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  outline: 'none'
+                }}
+                placeholder="0"
+              />
             </div>
-          </div>
-        </div>
+                          </div>
+                        </div>
 
         {/* Etiketler ve Gereksinimler */}
         <div style={{
@@ -600,7 +882,7 @@ export default function NewCoursePage() {
                   >
                     <span style={{ flex: 1 }}>{req}</span>
                     <button
-                      type="button"
+                        type="button"
                       onClick={() => removeRequirement(index)}
                       style={{
                         background: 'none',
@@ -611,7 +893,7 @@ export default function NewCoursePage() {
                     >
                       <X size={16} />
                     </button>
-                  </div>
+                    </div>
                 ))}
               </div>
             </div>
@@ -670,7 +952,7 @@ export default function NewCoursePage() {
                   >
                     <span style={{ flex: 1 }}>{learning}</span>
                     <button
-                      type="button"
+                type="button"
                       onClick={() => removeLearning(index)}
                       style={{
                         background: 'none',
@@ -739,8 +1021,8 @@ export default function NewCoursePage() {
         {/* Submit Button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
           <button
-            type="button"
-            onClick={() => router.push('/admin/courses')}
+              type="button"
+              onClick={() => router.push('/admin/courses')}
             style={{
               padding: '12px 24px',
               backgroundColor: '#f1f5f9',
@@ -750,8 +1032,8 @@ export default function NewCoursePage() {
               fontSize: '14px',
               color: '#475569'
             }}
-          >
-            İptal
+            >
+              İptal
           </button>
           <button
             type="submit"
@@ -789,8 +1071,8 @@ export default function NewCoursePage() {
               </>
             )}
           </button>
-        </div>
-      </form>
+          </div>
+        </form>
 
       <style>{`
         @keyframes spin {
@@ -798,6 +1080,6 @@ export default function NewCoursePage() {
           100% { transform: rotate(360deg); }
         }
       `}</style>
-    </div>
+      </div>
   );
 }

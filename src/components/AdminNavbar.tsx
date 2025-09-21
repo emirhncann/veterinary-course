@@ -13,8 +13,22 @@ import {
   Menu,
   X,
   BarChart3,
-  FileText
+  FileText,
+  UserCheck,
+  FolderOpen
 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Logo } from '@/components/Logo';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const adminNavItems = [
   {
@@ -26,6 +40,16 @@ const adminNavItems = [
     href: '/admin/courses',
     label: 'Kurslar',
     icon: BookOpen,
+  },
+  {
+    href: '/admin/instructors',
+    label: 'Eğitmenler',
+    icon: UserCheck,
+  },
+  {
+    href: '/admin/categories',
+    label: 'Kategoriler',
+    icon: FolderOpen,
   },
   {
     href: '/admin/students',
@@ -59,8 +83,10 @@ export function AdminNavbar() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [adminData, setAdminData] = React.useState<any>(null);
+  const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
+    setIsClient(true);
     // localStorage'dan admin bilgilerini al
     const adminUser = localStorage.getItem('admin_user');
     if (adminUser) {
@@ -76,6 +102,48 @@ export function AdminNavbar() {
   const isActiveRoute = (href: string) => {
     return pathname === href;
   };
+
+  // Client-side rendering kontrolü
+  if (!isClient) {
+    return (
+      <nav style={{
+        backgroundColor: 'white',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '0 24px',
+        height: '64px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Link href="/admin/dashboard" style={{ textDecoration: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                backgroundColor: '#3b82f6',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '14px'
+              }}>
+                A
+              </div>
+              <span style={{ fontWeight: '600', color: '#1f2937' }}>
+                Admin Panel
+              </span>
+            </div>
+          </Link>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '32px', height: '32px', backgroundColor: '#f3f4f6', borderRadius: '50%' }}></div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav style={{
@@ -106,8 +174,7 @@ export function AdminNavbar() {
       <div style={{ 
         display: 'flex', 
         alignItems: 'center', 
-        gap: '8px',
-        display: window.innerWidth > 768 ? 'flex' : 'none'
+        gap: '8px'
       }}>
         {adminNavItems.map((item) => {
           const Icon = item.icon;
@@ -173,6 +240,11 @@ export function AdminNavbar() {
           </div>
         )}
         
+        {/* Theme Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <ThemeSwitcher />
+        </div>
+
         <button
           onClick={handleLogout}
           style={{

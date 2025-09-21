@@ -129,19 +129,11 @@ export function CourseCard({ course, showPreview = true }: CourseCardProps) {
           {/* Instructor */}
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-2">
-              {course.instructor?.avatar ? (
-                <Image
-                  src={course.instructor.avatar}
-                  alt={course.instructor.name}
-                  width={24}
-                  height={24}
-                  className="rounded-full"
-                />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                  <Users className="h-3 w-3" />
-                </div>
-              )}
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <span className="text-xs text-white font-medium">
+                  {course.instructor?.name?.charAt(0) || 'E'}
+                </span>
+              </div>
               <span className="text-sm text-muted-foreground">
                 {course.instructor?.name || 'Bilinmeyen Eğitmen'}
               </span>

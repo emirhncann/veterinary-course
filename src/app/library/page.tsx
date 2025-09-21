@@ -263,13 +263,10 @@ function CourseCard({ enrollment }: { enrollment: Enrollment }) {
           {/* Instructor & Date */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
-              <div className="relative w-6 h-6 rounded-full overflow-hidden">
-                <Image
-                  src={course.instructor.avatar}
-                  alt={course.instructor.name}
-                  fill
-                  className="object-cover"
-                />
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <span className="text-xs text-white font-medium">
+                  {course.instructor.name?.charAt(0) || 'E'}
+                </span>
               </div>
               <span className="text-muted-foreground">{course.instructor.name}</span>
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+
 import { useParams, useRouter } from 'next/navigation';
 import { Play, Pause, Volume2, VolumeX, Settings, Maximize, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -13,7 +14,6 @@ import { VideoPlayer } from '@/components/VideoPlayer';
 import { apiFetch } from '@/lib/fetcher';
 import type { Course, Lesson } from '@/types/api';
 
-// Static params kaldırıldı - client component olduğu için generateStaticParams kullanılamaz
 
 async function getCourse(courseId: string): Promise<Course | null> {
   try {

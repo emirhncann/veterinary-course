@@ -26,12 +26,37 @@ export default function AdminLoginPage() {
     
     console.log('✅ Form submitted:', formData);
     
+    // Test için basit login (API çalışmıyorsa)
+    if (formData.email === 'admin@test.com' && formData.password === 'admin123') {
+      console.log('✅ Test login successful!');
+      const mockAdmin = {
+        id: 1,
+        email: 'admin@test.com',
+        role: 'admin'
+      };
+      localStorage.setItem('admin_user', JSON.stringify(mockAdmin));
+      console.log('💾 Admin data saved to localStorage');
+      console.log('🔄 Redirecting to dashboard...');
+      router.push('/admin/dashboard');
+      setLoading(false);
+      return;
+    }
+    
+    // Boş alan kontrolü
+    if (!formData.email || !formData.password) {
+      setError('Lütfen tüm alanları doldurun');
+      setLoading(false);
+      return;
+    }
+    
     try {
       // PHP API'ye POST request (api.vetmedipedia.com)
       const apiUrl = process.env.NODE_ENV === 'production' 
         ? 'https://api.vetmedipedia.com/admin/login'
         : 'https://api.vetmedipedia.com/admin/login'; // Test için aynı URL
         
+      console.log('🌐 Making API request to:', apiUrl);
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -44,6 +69,9 @@ export default function AdminLoginPage() {
           password: formData.password,
         }),
       });
+
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
 
       const data = await response.json();
       console.log('🔍 API Response:', data);
@@ -112,11 +140,30 @@ export default function AdminLoginPage() {
           fontSize: '1.875rem',
           fontWeight: 'bold',
           textAlign: 'center',
-          marginBottom: '1.5rem',
+          marginBottom: '1rem',
           color: '#1f2937'
         }}>
           🔐 Admin Giriş
         </h1>
+        
+        <div style={{
+          backgroundColor: '#f3f4f6',
+          border: '1px solid #d1d5db',
+          borderRadius: '6px',
+          padding: '12px',
+          marginBottom: '1.5rem',
+          fontSize: '0.875rem'
+        }}>
+          <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#374151' }}>
+            Test Bilgileri:
+          </p>
+          <p style={{ margin: '0 0 4px 0', color: '#6b7280' }}>
+            Email: <strong>admin@test.com</strong>
+          </p>
+          <p style={{ margin: '0', color: '#6b7280' }}>
+            Şifre: <strong>admin123</strong>
+          </p>
+        </div>
         
         {!loading && !error && (
           <div style={{
@@ -229,6 +276,30 @@ export default function AdminLoginPage() {
             />
           </div>
 
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({ email: 'admin@test.com', password: 'admin123' });
+            }}
+            style={{
+              width: '100%',
+              backgroundColor: '#10b981',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              border: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              marginBottom: '0.75rem',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.target.style.backgroundColor = '#059669'}
+            onMouseOut={(e) => e.target.style.backgroundColor = '#10b981'}
+          >
+            🧪 Test Bilgilerini Doldur
+          </button>
+          
           <button
             type="submit"
             disabled={loading}

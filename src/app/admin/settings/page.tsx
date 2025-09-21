@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AuthGuard } from '@/components/AuthGuard';
 import { apiFetch } from '@/lib/fetcher';
 
 interface AdminSettings {
@@ -121,7 +120,6 @@ export default function AdminSettingsPage() {
 
   if (loading) {
     return (
-      <AuthGuard requiredRole="admin">
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
@@ -132,13 +130,11 @@ export default function AdminSettingsPage() {
             </div>
           </div>
         </div>
-      </AuthGuard>
     );
   }
 
   if (!settings) {
     return (
-      <AuthGuard requiredRole="admin">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -148,7 +144,6 @@ export default function AdminSettingsPage() {
             </p>
           </div>
         </div>
-      </AuthGuard>
     );
   }
 
@@ -458,6 +453,5 @@ export default function AdminSettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AuthGuard>
   );
 }

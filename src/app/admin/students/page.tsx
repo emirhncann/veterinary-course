@@ -35,7 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AuthGuard } from '@/components/AuthGuard';
 import { apiFetch } from '@/lib/fetcher';
 import type { User } from '@/types/api';
 
@@ -148,7 +147,6 @@ export default function AdminStudentsPage() {
 
   if (loading) {
     return (
-      <AuthGuard requiredRole="admin">
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
@@ -159,7 +157,6 @@ export default function AdminStudentsPage() {
             </div>
           </div>
         </div>
-      </AuthGuard>
     );
   }
 
@@ -387,6 +384,5 @@ export default function AdminStudentsPage() {
           </div>
         )}
       </div>
-    </AuthGuard>
   );
 }

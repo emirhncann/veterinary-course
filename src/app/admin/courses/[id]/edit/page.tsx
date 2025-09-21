@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { AuthGuard } from '@/components/AuthGuard';
 import { apiFetch } from '@/lib/fetcher';
 import type { Course } from '@/types/api';
 
@@ -254,7 +253,6 @@ export default function EditCoursePage() {
 
   if (loading) {
     return (
-      <AuthGuard requiredRole="admin">
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
@@ -265,7 +263,6 @@ export default function EditCoursePage() {
             </div>
           </div>
         </div>
-      </AuthGuard>
     );
   }
 
@@ -275,8 +272,7 @@ export default function EditCoursePage() {
   );
 
   return (
-    <AuthGuard requiredRole="admin">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button
@@ -604,6 +600,7 @@ export default function EditCoursePage() {
           </div>
         </form>
       </div>
-    </AuthGuard>
   );
 }
+
+
